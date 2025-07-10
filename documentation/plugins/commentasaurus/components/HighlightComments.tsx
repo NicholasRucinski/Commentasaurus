@@ -6,9 +6,6 @@ import { createPortal } from "react-dom";
 const COMMENT_CARD_HEIGHT = 120;
 const COMMENT_CARD_SPACING = 20;
 
-const addCommentAPIURL: string | undefined = (window as any)
-  ?.__HIGHLIGHT_COMMENTS_CONFIG__?.commentApiUrl;
-
 // --- Types ---
 type SelectionInfo =
   | {
@@ -50,7 +47,20 @@ type Comment = ImageComment | TextComment;
 export default function HighlightComments(): JSX.Element {
   const [selectionInfo, setSelectionInfo] = useState<SelectionInfo>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const currentPage = window.location.pathname;
+
+  const [addCommentAPIURL, setAddCommentAPIURL] = useState<
+    string | undefined
+  >();
+  const [currentPage, setCurrentPage] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setAddCommentAPIURL(
+        (window as any).__HIGHLIGHT_COMMENTS_CONFIG__?.commentApiUrl
+      );
+      setCurrentPage(window.location.pathname);
+    }
+  }, []);
 
   // Restore saved comments (if needed)
   useEffect(() => {
