@@ -27,4 +27,9 @@ jobs:
           npm i
 
       - name: Deploy
-        run: cd documentation && npm run deploy
+        run: |
+          export ORG_NAME=$(echo ${GITHUB_REPOSITORY%/*})
+          export PROJECT_NAME=$(echo ${GITHUB_REPOSITORY#*/})
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+          cd documentation && npm run deploy
