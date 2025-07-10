@@ -17,10 +17,10 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm i
-
-      - name: Build
-        run: npm run build
+      - name: Install Deps
+        run: |
+          cd documentation
+          npm i
 
       - name: Deploy
         run: cd documentation && npm run deploy
