@@ -1,0 +1,57 @@
+.wrapper {
+  display: flex;
+  width: 100%;
+  position: relative;
+}
+
+.sidebar {
+  position: relative;
+  width: 300px;
+  background: #f9fafb;
+  border-left: 1px solid #ccc;
+  font-family: sans-serif;
+  padding-right: 8px;
+}
+
+.commentLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.commentCard {
+  position: absolute;
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  background: #f1f1f1;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.highlightedText {
+  background-color: #fff8c2;
+  transition: background-color 0.2s ease;
+}
+
+.highlightedText.hovered {
+  background-color: #facc15;
+}
+
+
+.highlightedImage {
+  display: inline-block; /* Ensures the wrapper behaves correctly */
+  position: relative;
+  outline: 3px solid #facc15; /* Same color as the add button */
+  outline-offset: 3px;
+  border-radius: 4px; /* Optional: for rounded corners on the highlight */
+}
+
+.highlightedImage.hovered {
+  outline-width: 5px;
+  outline-color: #eab308; /* A slightly darker yellow for hover */
+}
