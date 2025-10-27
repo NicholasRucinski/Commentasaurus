@@ -6,24 +6,46 @@ import DraftComment from "./DraftComment";
 import CommentCard from "./CommentCard";
 import { useSelection } from "./hooks/useSelection";
 import { restoreHighlights } from "./utils/highlights";
-import { loadComments, saveComments } from "./utils/storage";
+import { saveComments } from "./utils/storage";
+import { createComment, getComments } from "../api/comments";
 
 const COMMENT_CARD_HEIGHT = 150;
 const COMMENT_CARD_SPACING = 20;
 
 export default function HighlightComments() {
-  const [comments, setComments] = useState<Comment[]>(() => loadComments());
+  const [comments, setComments] = useState<Comment[]>([]);
   const [draftComment, setDraftComment] = useState<PositionedComment | null>(
     null
   );
 
   const { selectionInfo, clearSelection } = useSelection();
+  useEffect(() => {
+    const loadComments = async () => {
+      const { comments: loadedComments, error } = await getComments(
+        window.location.pathname
+      );
 
+      if (error) {
+        return;
+      }
+
+      setComments(loadedComments);
+    };
+    loadComments();
+  }, [window.location.pathname]);
   useEffect(() => saveComments(comments), [comments]);
   useEffect(() => restoreHighlights(comments), [comments]);
 
   const handleAddComment = useCallback(
     async (draft: BaseComment) => {
+      const { error } = await createComment(draft);
+      if (error) {
+        console.log(error);
+
+        setDraftComment(null);
+        clearSelection();
+        return;
+      }
       if (!draft.comment.trim()) return;
       const newComment: Comment = { ...draft, type: "TEXT" };
       setComments((prev) => [...prev, newComment]);

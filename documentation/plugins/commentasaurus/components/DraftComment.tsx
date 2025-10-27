@@ -16,8 +16,9 @@ const DraftComment = ({
     onCommentChange((prev) => prev && { ...prev, comment: e.target.value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
     if (draftComment.comment.trim()) {
+      e.preventDefault();
       onSubmit(draftComment);
     }
   };
@@ -30,26 +31,29 @@ const DraftComment = ({
       <p>
         <strong>Draft for “{draftComment.text}”</strong>
       </p>
-      <textarea
-        placeholder="Write your comment..."
-        value={draftComment.comment}
-        className={styles.commentCardInput}
-        onChange={handleChange}
-      />
-      <div className={styles.draftActions}>
-        <button
-          className={styles.draftCommentCardButton}
-          onClick={handleSubmit}
-        >
-          Submit
-        </button>
-        <button
-          className={styles.draftCommentCardButton}
-          onClick={() => onCommentChange(null)}
-        >
-          Cancel
-        </button>
-      </div>
+      <form>
+        <textarea
+          placeholder="Write your comment..."
+          value={draftComment.comment}
+          className={styles.commentCardInput}
+          onChange={handleChange}
+        />
+        <div className={styles.draftActions}>
+          <button
+            type="submit"
+            className={styles.draftCommentCardButton}
+            onClick={handleSubmit}
+          >
+            Submit
+          </button>
+          <button
+            className={styles.draftCommentCardButton}
+            onClick={() => onCommentChange(null)}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
