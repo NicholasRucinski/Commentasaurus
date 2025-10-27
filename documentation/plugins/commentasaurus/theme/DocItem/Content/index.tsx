@@ -7,6 +7,7 @@ import MDXContent from "@theme/MDXContent";
 import type { Props } from "@theme/DocItem/Content";
 import styles from "./styles.module.css";
 import HighlightComments from "@site/plugins/commentasaurus/components/HighlightComments";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
 /**
  Title can be declared inside md content or declared through
@@ -43,7 +44,7 @@ export default function DocItemContent({ children }: Props): ReactNode {
           <MDXContent>{children}</MDXContent>
         </div>
         <div className={styles.commentSidebar}>
-          <HighlightComments />
+          <BrowserOnly>{() => <HighlightComments />}</BrowserOnly>
         </div>
       </div>
     </div>
