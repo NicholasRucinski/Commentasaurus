@@ -5,7 +5,7 @@
 _Inline feedback, made simple_
 
 [![Documentation](https://img.shields.io/badge/📚-Documentation-brightgreen)](https://commentasaurus.nickrucinski.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/NicholasRucinski/Commentasaurus/blob/main/LICENCE.md)
 [![Made with Go](https://img.shields.io/badge/Backend-Go-00ADD8?logo=go)](https://go.dev/)
 [![Made with Docusaurus](https://img.shields.io/badge/Frontend-Docusaurus-3E5EB1?logo=docusaurus)](https://docusaurus.io/)
 
@@ -95,7 +95,7 @@ We welcome contributions! Please open issues, submit pull requests, or reach out
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See [LICENSE](https://github.com/NicholasRucinski/Commentasaurus/blob/main/LICENCE.md) for details.
 
 ## Collaborators
 
