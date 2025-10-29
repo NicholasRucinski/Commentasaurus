@@ -1,18 +1,16 @@
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
+import sidebars from "./sidebars";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: "My Site",
-  tagline: "Dinosaurs are cool",
+  title: "Commentasaurus",
+  tagline: "Dinosaurs are awesome",
   favicon: "img/favicon.ico",
 
-  plugins: [
-    require.resolve("./plugins/commentasaurus"),
-    // Add any other plugins you want to use here
-  ],
+  plugins: [require.resolve("./plugins/commentasaurus")],
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -43,28 +41,17 @@ const config: Config = {
 
   presets: [
     [
-      "classic",
+      "@docusaurus/preset-classic",
       {
         docs: {
-          sidebarPath: "./sidebars.ts",
+          routeBasePath: "/",
+          sidebarPath: require.resolve("./sidebars.ts"),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
         },
-        blog: {
-          showReadingTime: true,
-          feedOptions: {
-            type: ["rss", "atom"],
-            xslt: true,
-          },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          // Useful options to enforce blogging best practices
-          onInlineTags: "warn",
-          onInlineAuthors: "warn",
-          onUntruncatedBlogPosts: "warn",
-        },
+        blog: false,
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: require.resolve("./src/css/custom.css"),
         },
       } satisfies Preset.Options,
     ],
@@ -72,23 +59,28 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "My Site",
+      title: "Commentasaurus",
       logo: {
         alt: "My Site Logo",
-        src: "img/logo.svg",
+        src: "img/docusaurus.png",
       },
       items: [
+        {
+          type: "docSidebar",
+          sidebarId: "docSidebar",
+          position: "left",
+          label: "Docs",
+        },
         {
           type: "docSidebar",
           sidebarId: "tutorialSidebar",
           position: "left",
           label: "Tutorial",
         },
-        { to: "/blog", label: "Blog", position: "left" },
+
         {
-          href: "https://github.com/facebook/docusaurus",
+          href: "https://github.com/NicholasRucinski/Commentasaurus",
           label: "GitHub",
           position: "right",
         },
@@ -107,29 +99,8 @@ const config: Config = {
           ],
         },
         {
-          title: "Community",
-          items: [
-            {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            },
-            {
-              label: "Discord",
-              href: "https://discordapp.com/invite/docusaurus",
-            },
-            {
-              label: "X",
-              href: "https://x.com/docusaurus",
-            },
-          ],
-        },
-        {
           title: "More",
           items: [
-            {
-              label: "Blog",
-              to: "/blog",
-            },
             {
               label: "GitHub",
               href: "https://github.com/facebook/docusaurus",

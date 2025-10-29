@@ -1,30 +1,88 @@
 <div align="center">
 
 # Commentasaurus
-<!--
-[![Hosted Here](https://img.shields.io/badge/Website-50B498?style=flat)](https://clover.nickrucinski.com)
-[![API Docs](https://img.shields.io/badge/API%20Spec-blue?style=flat)](https://backend-639487598928.us-east5.run.app/apidocs/)
-[![Report Issue on Jira](https://img.shields.io/badge/Report%20Issues-Jira-0052CC?style=flat&logo=jira-software)](https://temple-cis-projects-in-cs.atlassian.net/jira/software/c/projects/GCCB/issues)
 
+_Inline feedback, made simple_
 
-[![Deploy Docs](https://github.com/ApplebaumIan/tu-cis-4398-docs-template/actions/workflows/deploy.yml/badge.svg)](https://github.com/Capstone-Projects-2025-Spring/project-copilot-clone-2/actions/workflows/deploy.yml)
+[![Documentation](https://img.shields.io/badge/📚-Documentation-brightgreen)](https://commentasaurus.nickrucinski.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
+[![Made with Go](https://img.shields.io/badge/Backend-Go-00ADD8?logo=go)](https://go.dev/)
+[![Made with Docusaurus](https://img.shields.io/badge/Frontend-Docusaurus-3E5EB1?logo=docusaurus)](https://docusaurus.io/)
 
-
-[![Documentation Website Link](https://img.shields.io/badge/-Documentation-brightgreen)](https://civic-interactions-lab.github.io/clover/)
--->
 </div>
+
+---
 
 ## Abstract
 
-A plugin for Docusaurus that allows comments to be posted directly in your docs.
+**Commentasaurus** is a plugin for [Docusaurus](https://docusaurus.io/) that enables inline comments within your documentation pages — letting users give direct feedback on specific sections of text, similar to Medium or Google Docs.
+
+---
 
 ## Tech Stack
 
+| Layer        | Technologies                                     | Description                                                                     |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| **Frontend** | [Docusaurus](https://docusaurus.io/), TypeScript | Renders the documentation and plugin interface                                  |
+| **Backend**  | [Go](https://go.dev/)                            | Handles comment APIs and authentication                                         |
+| **Storage**  | GitHub Discussions                               | Comments are stored using GitHub Discussions for collaboration and transparency |
+
+---
+
 ## Getting Started
 
-### Running
+### Folder Structure
 
-### Environment Variables
+```text
+.
+├── backend/
+│   ├── main.go               # Golang API entrypoint
+│   ├── routes/               # HTTP handlers and routing
+│   └── ...
+│
+├── documentation/
+│   ├── docs/                 # Markdown documentation about the plugin
+│   ├── docusaurus.config.ts  # Docusaurus config (plugin settings live here)
+│   └── plugins/
+│       └── commentasaurus/   # Local path to test the plugin inside Docusaurus
+│
+└── plugin/
+    └── src/                  # Source code of the plugin to be published to npm
+```
+
+> The /plugin directory should mirror the version under /documentation/plugins/commentasaurus to ensure consistency when testing.
+
+## Running Locally
+
+### Backend (Go API)
+
+```bash
+cd backend
+go run ./cmd/server/main.go
+```
+
+By default, the API runs on http://localhost:8080
+
+There is also a Dockerfile that can be used
+
+### Documentation site
+
+```bash
+cd documentation
+npm install
+npm run start
+```
+
+This will open http://localhost:3000 for you.
+
+## Environment Variables
+
+TODO
+
+## Preview
+
+TODO
+
 ## Contributing
 
 We welcome contributions! Please open issues, submit pull requests, or reach out with suggestions.
@@ -49,7 +107,7 @@ This project is licensed under the MIT License. See [LICENSE](./LICENSE.md) for 
         <a href="https://github.com/NicholasRucinski">
             <img src="https://avatars.githubusercontent.com/u/48574032?v=4" width="100;" alt="Nick"/>
             <br />
-            <sub><b>Nick</b></sub>
+            <sub><b>Nick Rucinski</b></sub>
         </a>
     </td>
 </tr>

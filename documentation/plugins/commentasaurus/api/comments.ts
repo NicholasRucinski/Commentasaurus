@@ -15,6 +15,13 @@ export async function getComments(
     }
 
     const data = await res.json();
+
+    if (data == null) {
+      return {
+        comments: [],
+      };
+    }
+
     return {
       comments: data,
     };
