@@ -6,7 +6,9 @@ export const API_URL = isLocal
 export type SelectionInfo =
   | {
       type: "TEXT";
+      contextBefore: string;
       text: string;
+      contextAfter: string;
       range: Range;
       x: number;
       y: number;
@@ -14,7 +16,9 @@ export type SelectionInfo =
   | {
       type: "IMAGE";
       node: HTMLImageElement;
+      contextBefore: string;
       text: string;
+      contextAfter: string;
       x: number;
       y: number;
     }
@@ -22,10 +26,12 @@ export type SelectionInfo =
 
 export type BaseComment = {
   id: string;
-  comment: string;
-  text: string;
-  y: number;
   page: string;
+  comment: string;
+  y: number;
+  contextBefore: string;
+  text: string;
+  contextAfter: string;
 };
 
 export type ImageComment = BaseComment & {

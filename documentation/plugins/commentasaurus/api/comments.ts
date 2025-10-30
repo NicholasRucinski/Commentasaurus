@@ -34,12 +34,12 @@ export async function getComments(
 export async function createComment(
   comment: BaseComment
 ): Promise<{ error?: string }> {
+  console.log(comment.contextBefore);
   try {
-    const payload = { ...comment, y: String(comment.y) };
     const res = await fetch(`${API_URL}/comment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(comment),
     });
 
     if (!res.ok) {

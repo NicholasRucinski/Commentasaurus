@@ -2,8 +2,8 @@
   display: flex;
   width: 100%;
   position: relative;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #111827;
+  padding-left: 12px;
 }
 
 .sidebar {
@@ -12,6 +12,7 @@
   height: 100vh;
   background: #fafafa;
   border-left: 1px solid #1d1d1d;
+  padding: 6px;
 }
 
 .commentLayer {
@@ -21,7 +22,6 @@
   width: 100%;
 }
 
-/* --- Comment Cards --- */
 .commentCard,
 .draftCommentCard {
   position: absolute;
@@ -49,7 +49,6 @@
   box-shadow: 0 2px 10px rgba(21, 151, 250, 0.3);
 }
 
-/* --- Draft Inputs --- */
 .commentCardInput {
   width: 100%;
   min-height: 70px;
@@ -69,7 +68,6 @@
   background-color: #fff;
 }
 
-/* --- Buttons --- */
 .draftActions {
   margin-top: 8px;
   display: flex;
@@ -96,11 +94,8 @@
   color: #1f2937;
 }
 
-/* --- Highlights --- */
 .highlightedText {
   background-color: #fff8c2;
-  border-radius: 3px;
-  padding: 0 2px;
   transition: background-color 0.2s ease;
 }
 
@@ -156,5 +151,4 @@
 
 .portal:hover {
   background: rgb(228, 195, 62);
-
 }

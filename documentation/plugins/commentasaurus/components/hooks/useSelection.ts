@@ -18,6 +18,18 @@ export function useSelection() {
     const contents = range.cloneContents();
     const img = contents.querySelector?.("img") as HTMLImageElement | null;
 
+    const anchorNode = range.startContainer;
+    const fullText =
+      anchorNode.nodeType === Node.TEXT_NODE
+        ? anchorNode.textContent || ""
+        : anchorNode.textContent || "";
+
+    const { before, after } = getContextWords(
+      fullText,
+      range.startOffset,
+      range.endOffset
+    );
+
     if (img) {
       const selectedNode = Array.from(document.querySelectorAll("img")).find(
         (node) => node.src === img.src
@@ -29,7 +41,9 @@ export function useSelection() {
           node: selectedNode,
           x: rect.left + window.scrollX,
           y: rect.top + window.scrollY,
+          contextBefore: before,
           text: selectedNode.alt?.trim() || "[Image]",
+          contextAfter: after,
         });
       }
       return;
@@ -43,7 +57,9 @@ export function useSelection() {
 
     setSelectionInfo({
       type: "TEXT",
+      contextBefore: before,
       text,
+      contextAfter: after,
       range: range.cloneRange(),
       x: rect.left + window.scrollX,
       y: rect.top + window.scrollY,
@@ -56,4 +72,21 @@ export function useSelection() {
   }, [handleMouseUp]);
 
   return { selectionInfo, clearSelection: () => setSelectionInfo(null) };
+}
+
+function getContextWords(
+  fullText: string,
+  selectionStart: number,
+  selectionEnd: number
+): { before: string; after: string } {
+  const beforeText = fullText.slice(0, selectionStart).trim();
+  const afterText = fullText.slice(selectionEnd).trim();
+
+  const beforeWords = beforeText.split(/\s+/);
+  const afterWords = afterText.split(/\s+/);
+
+  return {
+    before: beforeWords.slice(-5).join(" "),
+    after: afterWords.slice(0, 5).join(" "),
+  };
 }

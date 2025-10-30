@@ -2,21 +2,18 @@ import styles from "../styles.module.css";
 import { Comment } from "../../types";
 
 export function restoreHighlights(comments: Comment[]) {
-  // 1️⃣ Remove any existing highlights that aren’t in the current comments list
   const activeIds = new Set(comments.map((c) => c.id));
   document.querySelectorAll("[data-comment-id]").forEach((el) => {
     const id = el.getAttribute("data-comment-id");
     if (!id || !activeIds.has(id)) {
       const parent = el.parentNode;
       if (parent) {
-        // unwrap the span (restore plain text)
         while (el.firstChild) parent.insertBefore(el.firstChild, el);
         parent.removeChild(el);
       }
     }
   });
 
-  // 2️⃣ Add highlights for comments that don’t already exist
   comments.forEach((c) => {
     if (document.querySelector(`[data-comment-id="${c.id}"]`)) return;
 

@@ -15,20 +15,22 @@ type Handler struct{}
 
 // I think I want to send down repo name, id, and category id here
 type AddCommentRequest struct {
-	ID      string `json:"id"`
-	Page    string `json:"page"`
-	Text    string `json:"text"`
-	Comment string `json:"comment"`
-	Y       string `json:"y"`
+	ID            string `json:"id"`
+	Page          string `json:"page"`
+	ContextBefore string `json:"contextBefore"`
+	Text          string `json:"text"`
+	ContextAfter  string `json:"contextAfter"`
+	Comment       string `json:"comment"`
 }
 
 type Comment struct {
-	ID      string `json:"id"`
-	Page    string `json:"page"`
-	Text    string `json:"text"`
-	Comment string `json:"comment"`
-	Y       string `json:"y"`
-	User    string `json:"user,omitempty"`
+	ID            string `json:"id"`
+	Page          string `json:"page"`
+	BeforeContext string `json:"contextBefore"`
+	Text          string `json:"text"`
+	AfterContext  string `json:"contextAfter"`
+	Comment       string `json:"comment"`
+	User          string `json:"user,omitempty"`
 }
 
 type GraphQLRequest struct {
@@ -70,9 +72,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		"%s\n\n```json\n%s\n```",
 		incoming.Comment,
 		toJSONString(map[string]string{
-			"text": incoming.Text,
-			"y":    incoming.Y,
-			"page": incoming.Page,
+			"contextBefore": incoming.ContextBefore,
+			"text":          incoming.Text,
+			"contextAfter":  incoming.ContextAfter,
+			"page":          incoming.Page,
 		}),
 	)
 
@@ -317,12 +320,13 @@ query GetDiscussionComments($discussionId: ID!) {
 	for _, node := range result.Data.Node.Comments.Nodes {
 		parsed := parseCommentBody(node.Body, page)
 		comments = append(comments, Comment{
-			ID:      node.ID,
-			Page:    page,
-			Text:    parsed["text"],
-			Y:       parsed["y"],
-			Comment: parsed["comment"],
-			User:    node.Author.Login,
+			ID:            node.ID,
+			Page:          page,
+			BeforeContext: parsed["contextBefore"],
+			Text:          parsed["text"],
+			AfterContext:  parsed["contextAfter"],
+			Comment:       parsed["comment"],
+			User:          node.Author.Login,
 		})
 	}
 

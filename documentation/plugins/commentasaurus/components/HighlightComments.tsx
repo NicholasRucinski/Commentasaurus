@@ -8,6 +8,7 @@ import { useSelection } from "./hooks/useSelection";
 import { restoreHighlights } from "./utils/highlights";
 import { saveComments } from "./utils/storage";
 import { createComment, getComments } from "../api/comments";
+import { reanchorComments } from "./utils/reanchor";
 
 const COMMENT_CARD_HEIGHT = 150;
 const COMMENT_CARD_SPACING = 20;
@@ -25,14 +26,14 @@ export default function HighlightComments() {
         window.location.pathname
       );
 
-      if (error) {
-        return;
-      }
+      if (error) return;
 
-      setComments(loadedComments);
+      const anchored = reanchorComments(loadedComments);
+      setComments(anchored);
     };
     loadComments();
   }, [window.location.pathname]);
+
   useEffect(() => saveComments(comments), [comments]);
   useEffect(() => restoreHighlights(comments), [comments]);
 
@@ -77,12 +78,16 @@ export default function HighlightComments() {
 
   const handleAddCommentClick = useCallback(() => {
     if (!selectionInfo) return;
+    console.log(selectionInfo.contextBefore);
+    console.log(selectionInfo.contextAfter);
     const draft: PositionedComment = {
       id: crypto.randomUUID(),
-      comment: "",
-      text: selectionInfo.text,
-      y: selectionInfo.y,
       page: window.location.pathname,
+      y: selectionInfo.y,
+      comment: "",
+      contextBefore: selectionInfo.contextBefore,
+      text: selectionInfo.text,
+      contextAfter: selectionInfo.contextAfter,
       top: selectionInfo.y - 270,
     };
     setDraftComment(draft);
