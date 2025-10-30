@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -10,6 +12,15 @@ import (
 )
 
 func main() {
+
+	logsEnabled := flag.Bool("log", false, "Enable error logging")
+	flag.Parse()
+
+	if !*logsEnabled {
+		log.SetOutput(io.Discard)
+	}
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found or error loading it")
 	}
