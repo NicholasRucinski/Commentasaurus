@@ -13,10 +13,11 @@ func RegisterRoutes() http.Handler {
 
 	router.HandleFunc("POST /comment", handler.Create)
 	router.HandleFunc("GET /comment", handler.GetAll)
+	router.HandleFunc("PATCH /comment", handler.Resolve)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://commentasaurus.nickrucinski.com"},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}).Handler(router)

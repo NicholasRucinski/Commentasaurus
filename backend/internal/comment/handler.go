@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -31,6 +32,7 @@ type Comment struct {
 	AfterContext  string `json:"contextAfter"`
 	Comment       string `json:"comment"`
 	User          string `json:"user,omitempty"`
+	Resolved      bool   `json:"resolved"`
 }
 
 type GraphQLRequest struct {
@@ -76,6 +78,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 			"text":          incoming.Text,
 			"contextAfter":  incoming.ContextAfter,
 			"page":          incoming.Page,
+			"resolved":      "false",
 		}),
 	)
 
@@ -105,8 +108,248 @@ mutation AddDiscussionComment($discussionId: ID!, $body: String!) {
 		return
 	}
 
+	var result struct {
+		Data struct {
+			AddDiscussionComment struct {
+				Comment struct {
+					ID string `json:"id"`
+				} `json:"comment"`
+			} `json:"addDiscussionComment"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	log.Println(string(respBody))
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Comment created!"))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result.Data.AddDiscussionComment.Comment.ID)
+
+}
+
+func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	page := r.URL.Query().Get("page")
+	if page == "" {
+		http.Error(w, "Missing ?page= query parameter", http.StatusBadRequest)
+		return
+	}
+
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	repoOwner := os.Getenv("GITHUB_REPO_OWNER")
+	repoName := os.Getenv("GITHUB_REPO_NAME")
+	if githubToken == "" || repoOwner == "" || repoName == "" {
+		http.Error(w, "Missing GitHub config", http.StatusInternalServerError)
+		return
+	}
+
+	client := &http.Client{}
+
+	discussionID, err := findOrCreateDiscussion(client, githubToken, repoOwner, repoName, page)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error finding/creating discussion: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	query := `
+query GetDiscussionComments($discussionId: ID!) {
+  node(id: $discussionId) {
+    ... on Discussion {
+      comments(first: 50) {
+        nodes {
+          id
+          body
+          author {
+            login
+          }
+          createdAt
+        }
+      }
+    }
+  }
+}`
+
+	reqBody := GraphQLRequest{
+		Query: query,
+		Variables: map[string]interface{}{
+			"discussionId": discussionID,
+		},
+	}
+
+	respBody, status, err := callGitHubGraphQL(client, githubToken, reqBody)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching comments: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if status != http.StatusOK {
+		http.Error(w, fmt.Sprintf("GitHub API returned %d: %s", status, string(respBody)), status)
+		return
+	}
+
+	log.Printf("GitHub Response: %s\n", string(respBody))
+	var result struct {
+		Data struct {
+			Node struct {
+				Comments struct {
+					Nodes []struct {
+						ID     string `json:"id"`
+						Body   string `json:"body"`
+						Author struct {
+							Login string `json:"login"`
+						} `json:"author"`
+					} `json:"nodes"`
+				} `json:"comments"`
+			} `json:"node"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	var comments []Comment
+	for _, node := range result.Data.Node.Comments.Nodes {
+		parsed := parseCommentBody(node.Body, page)
+		resolved, err := strconv.ParseBool(parsed["resolved"])
+		if err != nil {
+			log.Println("Failed to parse resolved to bool")
+			resolved = false
+		}
+		comments = append(comments, Comment{
+			ID:            node.ID,
+			Page:          page,
+			BeforeContext: parsed["contextBefore"],
+			Text:          parsed["text"],
+			AfterContext:  parsed["contextAfter"],
+			Comment:       parsed["comment"],
+			User:          node.Author.Login,
+			Resolved:      resolved,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(comments)
+}
+
+type ResolveCommentRequest struct {
+	ID   string `json:"id"`
+	Page string `json:"page"`
+}
+
+func (h *Handler) Resolve(w http.ResponseWriter, r *http.Request) {
+	log.Println("Resolving a comment")
+	var req ResolveCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Println("Invalid request body: ", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken == "" {
+		log.Println("GITHUB_TOKEN not set")
+		http.Error(w, "GITHUB_TOKEN not set", http.StatusInternalServerError)
+		return
+	}
+
+	client := &http.Client{}
+
+	query := `
+	query GetComment($id: ID!) {
+	  node(id: $id) {
+	    ... on DiscussionComment {
+	      id
+	      body
+	    }
+	  }
+	}`
+
+	getReq := GraphQLRequest{
+		Query: query,
+		Variables: map[string]interface{}{
+			"id": req.ID,
+		},
+	}
+
+	respBody, status, err := callGitHubGraphQL(client, githubToken, getReq)
+	if err != nil {
+		log.Printf("Error fetching comment: %v", err)
+		http.Error(w, fmt.Sprintf("Error fetching comment: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if status != http.StatusOK {
+		log.Printf("GitHub API returned %d: %s", status, string(respBody))
+		http.Error(w, fmt.Sprintf("GitHub API returned %d: %s", status, string(respBody)), status)
+		return
+	}
+
+	var result struct {
+		Data struct {
+			Node struct {
+				ID   string `json:"id"`
+				Body string `json:"body"`
+			} `json:"node"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		log.Printf("Error decoding response: %v", err)
+		http.Error(w, fmt.Sprintf("Error decoding response: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	body := result.Data.Node.Body
+
+	parsed := parseCommentBody(body, req.Page)
+
+	updatedBody := fmt.Sprintf(
+		"%s\n\n```json\n%s\n```",
+		parsed["comment"],
+		toJSONString(map[string]string{
+			"contextBefore": parsed["contextBefore"],
+			"text":          parsed["text"],
+			"contextAfter":  parsed["contextAfter"],
+			"page":          parsed["page"],
+			"resolved":      "true",
+		}),
+	)
+
+	updateQuery := `
+	mutation UpdateComment($id: ID!, $body: String!) {
+	  updateDiscussionComment(input: { commentId: $id, body: $body }) {
+	    comment {
+	      id
+	      body
+	    }
+	  }
+	}`
+
+	updateReq := GraphQLRequest{
+		Query: updateQuery,
+		Variables: map[string]interface{}{
+			"id":   req.ID,
+			"body": updatedBody,
+		},
+	}
+
+	updateResp, status, err := callGitHubGraphQL(client, githubToken, updateReq)
+	if err != nil {
+		log.Printf("Error updating comment: %v", err)
+		http.Error(w, fmt.Sprintf("Error updating comment: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if status != http.StatusOK {
+		log.Printf("GitHub API returned %d: %s", status, string(updateResp))
+		http.Error(w, fmt.Sprintf("GitHub API returned %d: %s", status, string(updateResp)), status)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"resolved"}`))
 }
 
 func findOrCreateDiscussion(client *http.Client, token, owner, repo, page string) (string, error) {
@@ -234,104 +477,6 @@ func callGitHubGraphQL(client *http.Client, token string, body GraphQLRequest) (
 func toJSONString(v interface{}) string {
 	data, _ := json.MarshalIndent(v, "", "  ")
 	return string(data)
-}
-
-func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
-	page := r.URL.Query().Get("page")
-	if page == "" {
-		http.Error(w, "Missing ?page= query parameter", http.StatusBadRequest)
-		return
-	}
-
-	githubToken := os.Getenv("GITHUB_TOKEN")
-	repoOwner := os.Getenv("GITHUB_REPO_OWNER")
-	repoName := os.Getenv("GITHUB_REPO_NAME")
-	if githubToken == "" || repoOwner == "" || repoName == "" {
-		http.Error(w, "Missing GitHub config", http.StatusInternalServerError)
-		return
-	}
-
-	client := &http.Client{}
-
-	discussionID, err := findOrCreateDiscussion(client, githubToken, repoOwner, repoName, page)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error finding/creating discussion: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	query := `
-query GetDiscussionComments($discussionId: ID!) {
-  node(id: $discussionId) {
-    ... on Discussion {
-      comments(first: 50) {
-        nodes {
-          id
-          body
-          author {
-            login
-          }
-          createdAt
-        }
-      }
-    }
-  }
-}`
-
-	reqBody := GraphQLRequest{
-		Query: query,
-		Variables: map[string]interface{}{
-			"discussionId": discussionID,
-		},
-	}
-
-	respBody, status, err := callGitHubGraphQL(client, githubToken, reqBody)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching comments: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if status != http.StatusOK {
-		http.Error(w, fmt.Sprintf("GitHub API returned %d: %s", status, string(respBody)), status)
-		return
-	}
-
-	log.Printf("GitHub Response: %s\n", string(respBody))
-	var result struct {
-		Data struct {
-			Node struct {
-				Comments struct {
-					Nodes []struct {
-						ID     string `json:"id"`
-						Body   string `json:"body"`
-						Author struct {
-							Login string `json:"login"`
-						} `json:"author"`
-					} `json:"nodes"`
-				} `json:"comments"`
-			} `json:"node"`
-		} `json:"data"`
-	}
-
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		http.Error(w, fmt.Sprintf("Error decoding JSON: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	var comments []Comment
-	for _, node := range result.Data.Node.Comments.Nodes {
-		parsed := parseCommentBody(node.Body, page)
-		comments = append(comments, Comment{
-			ID:            node.ID,
-			Page:          page,
-			BeforeContext: parsed["contextBefore"],
-			Text:          parsed["text"],
-			AfterContext:  parsed["contextAfter"],
-			Comment:       parsed["comment"],
-			User:          node.Author.Login,
-		})
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
 }
 
 func parseCommentBody(body, page string) map[string]string {

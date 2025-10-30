@@ -7,7 +7,7 @@ import CommentCard from "./CommentCard";
 import { useSelection } from "./hooks/useSelection";
 import { restoreHighlights } from "./utils/highlights";
 import { saveComments } from "./utils/storage";
-import { createComment, getComments } from "../api/comments";
+import { createComment, getComments, resolveComment } from "../api/comments";
 import { reanchorComments } from "./utils/reanchor";
 
 const COMMENT_CARD_HEIGHT = 150;
@@ -28,7 +28,11 @@ export default function HighlightComments() {
 
       if (error) return;
 
-      const anchored = reanchorComments(loadedComments);
+      // console.log(loadedComments);
+
+      const anchored = reanchorComments(
+        loadedComments.filter((comment) => comment.resolved === false)
+      );
       setComments(anchored);
     };
     loadComments();
@@ -39,8 +43,8 @@ export default function HighlightComments() {
 
   const handleAddComment = useCallback(
     async (draft: BaseComment) => {
-      const { error } = await createComment(draft);
-      if (error) {
+      const { id, error } = await createComment(draft);
+      if (!id || error) {
         console.log(error);
 
         setDraftComment(null);
@@ -48,7 +52,7 @@ export default function HighlightComments() {
         return;
       }
       if (!draft.comment.trim()) return;
-      const newComment: Comment = { ...draft, type: "TEXT" };
+      const newComment: Comment = { id: id, ...draft, type: "TEXT" };
       setComments((prev) => [...prev, newComment]);
       setDraftComment(null);
       clearSelection();
@@ -72,14 +76,18 @@ export default function HighlightComments() {
     [comments]
   );
 
-  const resolveComment = (comment: BaseComment) => {
+  const onResolveComment = (comment: BaseComment) => {
+    const resolve = async () => {
+      const { error } = await resolveComment(comment);
+      if (error) {
+      }
+    };
+    resolve();
     setComments((prev) => prev.filter((c) => c.id !== comment.id));
   };
 
   const handleAddCommentClick = useCallback(() => {
     if (!selectionInfo) return;
-    console.log(selectionInfo.contextBefore);
-    console.log(selectionInfo.contextAfter);
     const draft: PositionedComment = {
       id: crypto.randomUUID(),
       page: window.location.pathname,
@@ -89,6 +97,7 @@ export default function HighlightComments() {
       text: selectionInfo.text,
       contextAfter: selectionInfo.contextAfter,
       top: selectionInfo.y - 270,
+      resolved: false,
     };
     setDraftComment(draft);
   }, [selectionInfo]);
@@ -123,7 +132,7 @@ export default function HighlightComments() {
             <p style={{ padding: 16 }}>No comments yet.</p>
           ) : (
             positionedComments.map((c) => (
-              <CommentCard key={c.id} card={c} onResolve={resolveComment} />
+              <CommentCard key={c.id} card={c} onResolve={onResolveComment} />
             ))
           )}
         </div>

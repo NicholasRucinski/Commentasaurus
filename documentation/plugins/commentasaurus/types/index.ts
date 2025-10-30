@@ -32,6 +32,7 @@ export type BaseComment = {
   contextBefore: string;
   text: string;
   contextAfter: string;
+  resolved: boolean;
 };
 
 export type ImageComment = BaseComment & {
