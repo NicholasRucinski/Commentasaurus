@@ -1,0 +1,22 @@
+.githubBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #000;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.githubBtn:hover {
+  background-color: #333;
+}
+
+.githubIcon {
+  width: 20px;
+  height: 20px;
+}

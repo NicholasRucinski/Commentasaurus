@@ -35,4 +35,3 @@ func main() {
 
 	log.Println("Build and push complete")
 }
-
