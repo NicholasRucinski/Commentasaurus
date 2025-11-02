@@ -15,7 +15,7 @@ _Inline feedback, made simple_
 
 ## Abstract
 
-**Commentasaurus** is a plugin for [Docusaurus](https://docusaurus.io/) that enables inline comments within your documentation pages — letting users give direct feedback on specific sections of text, similar to Medium or Google Docs.
+**Commentasaurus** is a plugin for [Docusaurus](https://docusaurus.io/) that enables inline comments within your documentation pages, letting users give direct feedback on specific sections of text, similar to Google Docs.
 
 ---
 

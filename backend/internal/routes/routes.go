@@ -3,17 +3,24 @@ package routes
 import (
 	"net/http"
 
+	"github.com/NicholasRucinski/commentasaurus/internal/auth"
 	comments "github.com/NicholasRucinski/commentasaurus/internal/comment"
 	"github.com/rs/cors"
 )
 
 func RegisterRoutes() http.Handler {
-	handler := &comments.Handler{}
+	commentHandler := &comments.Handler{}
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /comment", handler.Create)
-	router.HandleFunc("GET /comment", handler.GetAll)
-	router.HandleFunc("PATCH /comment", handler.Resolve)
+	router.HandleFunc("POST /comment", commentHandler.Create)
+	router.HandleFunc("GET /comment", commentHandler.GetAll)
+	router.HandleFunc("PATCH /comment", commentHandler.Resolve)
+
+	authHandler := &auth.Handler{}
+
+	router.HandleFunc("GET /auth", authHandler.StartAuth)
+	router.HandleFunc("GET /auth/callback", authHandler.AuthCallback)
+	router.HandleFunc("GET /me", authHandler.GetUser)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://commentasaurus.nickrucinski.com"},
