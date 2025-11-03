@@ -9,6 +9,8 @@ import { restoreHighlights } from "./utils/highlights";
 import { saveComments } from "./utils/storage";
 import { createComment, getComments, resolveComment } from "../api/comments";
 import { reanchorComments } from "./utils/reanchor";
+import { useCommentasaurusConfig } from "./hooks/useConfig";
+import { useUser } from "../contexts/UserContext";
 
 const COMMENT_CARD_HEIGHT = 150;
 const COMMENT_CARD_SPACING = 20;
@@ -18,17 +20,31 @@ export default function HighlightComments() {
   const [draftComment, setDraftComment] = useState<PositionedComment | null>(
     null
   );
-
+  const {
+    apiUrl,
+    autoShowComments,
+    repoOwner,
+    repoName,
+    repoID,
+    repoCategoryId,
+  } = useCommentasaurusConfig();
+  const [canComment, setCanComment] = useState<boolean>(true);
+  const [showSidebar, setShowSidebar] = useState<boolean>(autoShowComments);
   const { selectionInfo, clearSelection } = useSelection();
+  const { user, setUser } = useUser();
+
   useEffect(() => {
     const loadComments = async () => {
       const { comments: loadedComments, error } = await getComments(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
         window.location.pathname
       );
 
       if (error) return;
-
-      // console.log(loadedComments);
 
       const anchored = reanchorComments(
         loadedComments.filter((comment) => comment.resolved === false)
@@ -43,7 +59,15 @@ export default function HighlightComments() {
 
   const handleAddComment = useCallback(
     async (draft: BaseComment) => {
-      const { id, error } = await createComment(draft);
+      const { id, error } = await createComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        draft
+      );
       if (!id || error) {
         console.log(error);
 
@@ -78,7 +102,15 @@ export default function HighlightComments() {
 
   const onResolveComment = (comment: BaseComment) => {
     const resolve = async () => {
-      const { error } = await resolveComment(comment);
+      const { error } = await resolveComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        comment
+      );
       if (error) {
       }
     };
@@ -98,45 +130,75 @@ export default function HighlightComments() {
       contextAfter: selectionInfo.contextAfter,
       top: selectionInfo.y - 270,
       resolved: false,
+      user: user.name,
     };
     setDraftComment(draft);
   }, [selectionInfo]);
 
   return (
     <div className={styles.wrapper}>
-      {selectionInfo &&
-        createPortal(
-          <button
-            onClick={handleAddCommentClick}
-            className={styles.portal}
-            style={{
-              top: selectionInfo.y - 40,
-              left: selectionInfo.x,
-            }}
-          >
-            Add Comment
-          </button>,
-          document.body
-        )}
+      {canComment ? (
+        <>
+          {selectionInfo &&
+            createPortal(
+              <button
+                onClick={handleAddCommentClick}
+                className={styles.portal}
+                style={{
+                  top: selectionInfo.y - 40,
+                  left: selectionInfo.x,
+                }}
+              >
+                Add Comment
+              </button>,
+              document.body
+            )}
+        </>
+      ) : (
+        <></>
+      )}
 
-      <div className={styles.sidebar}>
-        <div className={styles.commentLayer}>
-          {draftComment && (
-            <DraftComment
-              draftComment={draftComment}
-              onCommentChange={setDraftComment}
-              onSubmit={handleAddComment}
-            />
-          )}
-          {positionedComments.length === 0 ? (
-            <p style={{ padding: 16 }}>No comments yet.</p>
-          ) : (
-            positionedComments.map((c) => (
-              <CommentCard key={c.id} card={c} onResolve={onResolveComment} />
-            ))
-          )}
-        </div>
-      </div>
+      {showSidebar ? (
+        <>
+          <button
+            onClick={() => setShowSidebar(false)}
+            className={`${styles.toggleButton} ${styles.toggleHide}`}
+          >
+            ❯
+          </button>
+          <div className={styles.sidebar}>
+            <div className={styles.commentLayer}>
+              {draftComment && (
+                <DraftComment
+                  draftComment={draftComment}
+                  onCommentChange={setDraftComment}
+                  onSubmit={handleAddComment}
+                />
+              )}
+              <>
+                {positionedComments.length === 0 ? (
+                  <p style={{ padding: 16 }}>No comments yet.</p>
+                ) : (
+                  positionedComments.map((c) => (
+                    <CommentCard
+                      key={c.id}
+                      card={c}
+                      onResolve={onResolveComment}
+                    />
+                  ))
+                )}
+              </>
+            </div>
+          </div>
+        </>
+      ) : (
+        <button
+          onClick={() => setShowSidebar(true)}
+          className={`${styles.toggleButton} ${styles.toggleShow}`}
+        >
+          ❮ Comments
+        </button>
+      )}
     </div>
   );
 }

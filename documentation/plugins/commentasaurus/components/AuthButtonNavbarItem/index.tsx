@@ -1,35 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styles from "./styles.module.css";
-import { API_URL, User } from "../../types";
-import { getUser } from "../../api/user";
+import { User } from "../../types";
+import { useUser } from "../../contexts/UserContext";
+import { useCommentasaurusConfig } from "../hooks/useConfig";
 
 export default function AuthButtonNavbarItem() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useUser();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { user: fetchedUser, error } = await getUser();
-      if (error || !fetchedUser) {
-        setUser(null);
-        return;
-      }
-      setUser(fetchedUser);
-    };
-    fetchUser();
-  }, []);
+  const { apiUrl } = useCommentasaurusConfig();
+
+  const handleSignOut = () => {
+    setUser(null);
+  };
+
+  const handleSignIn = () => {
+    const redirectUri = encodeURIComponent(window.location.href);
+    window.location.href = `${apiUrl}/auth?redirect_uri=${redirectUri}`;
+  };
 
   return (
     <>
       {user ? (
-        <UserImage
-          user={user}
-          handleSignOut={() => {
-            setUser(null);
-            console.log("hello");
-          }}
-        />
+        <UserImage user={user} handleSignOut={handleSignOut} />
       ) : (
-        <SignInButton />
+        <SignInButton handleSignIn={handleSignIn} />
       )}
     </>
   );
@@ -53,11 +47,7 @@ const UserImage = ({
   );
 };
 
-const SignInButton = () => {
-  const handleSignIn = () => {
-    const redirectUri = encodeURIComponent(window.location.href);
-    window.location.href = `${API_URL}/auth?redirect_uri=${redirectUri}`;
-  };
+const SignInButton = ({ handleSignIn }: { handleSignIn: () => void }) => {
   return (
     <button
       type="button"

@@ -14,10 +14,8 @@ import (
 
 type Handler struct{}
 
-// I think I want to send down repo name, id, and category id here
 type AddCommentRequest struct {
 	ID            string `json:"id"`
-	Page          string `json:"page"`
 	ContextBefore string `json:"contextBefore"`
 	Text          string `json:"text"`
 	ContextAfter  string `json:"contextAfter"`
@@ -49,12 +47,21 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repoOwner := os.Getenv("GITHUB_REPO_OWNER")
-	repoName := os.Getenv("GITHUB_REPO_NAME")
-	if repoOwner == "" || repoName == "" {
-		http.Error(w, "Missing repo owner or name", http.StatusInternalServerError)
+	categoryId := r.URL.Query().Get("category_id")
+	if categoryId == "" {
+		http.Error(w, "Missing ?category_id= query parameter", http.StatusBadRequest)
 		return
 	}
+
+	repoId := r.URL.Query().Get("repo_id")
+	if repoId == "" {
+		http.Error(w, "Missing ?repo_id= query parameter", http.StatusBadRequest)
+		return
+	}
+
+	org := r.PathValue("org")
+	repo := r.PathValue("repo")
+	page := r.PathValue("page")
 
 	var incoming AddCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&incoming); err != nil {
@@ -64,7 +71,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	client := &http.Client{}
 
-	discussionID, err := findOrCreateDiscussion(client, githubToken, repoOwner, repoName, incoming.Page)
+	discussionID, err := findOrCreateDiscussion(client, githubToken, org, repo, page, categoryId, repoId)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error finding/creating discussion: %v", err), http.StatusInternalServerError)
 		return
@@ -77,7 +84,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 			"contextBefore": incoming.ContextBefore,
 			"text":          incoming.Text,
 			"contextAfter":  incoming.ContextAfter,
-			"page":          incoming.Page,
+			"page":          page,
 			"resolved":      "false",
 		}),
 	)
@@ -132,23 +139,33 @@ mutation AddDiscussionComment($discussionId: ID!, $body: String!) {
 }
 
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
-	page := r.URL.Query().Get("page")
-	if page == "" {
-		http.Error(w, "Missing ?page= query parameter", http.StatusBadRequest)
-		return
-	}
+	log.Println("Getting all comments")
 
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	repoOwner := os.Getenv("GITHUB_REPO_OWNER")
-	repoName := os.Getenv("GITHUB_REPO_NAME")
-	if githubToken == "" || repoOwner == "" || repoName == "" {
+	if githubToken == "" {
 		http.Error(w, "Missing GitHub config", http.StatusInternalServerError)
 		return
 	}
 
+	categoryId := r.URL.Query().Get("category_id")
+	if categoryId == "" {
+		http.Error(w, "Missing ?category_id= query parameter", http.StatusBadRequest)
+		return
+	}
+
+	repoId := r.URL.Query().Get("repo_id")
+	if repoId == "" {
+		http.Error(w, "Missing ?repo_id= query parameter", http.StatusBadRequest)
+		return
+	}
+
+	org := r.PathValue("org")
+	repo := r.PathValue("repo")
+	page := r.PathValue("page")
+
 	client := &http.Client{}
 
-	discussionID, err := findOrCreateDiscussion(client, githubToken, repoOwner, repoName, page)
+	discussionID, err := findOrCreateDiscussion(client, githubToken, org, repo, page, categoryId, repoId)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error finding/creating discussion: %v", err), http.StatusInternalServerError)
 		return
@@ -189,7 +206,7 @@ query GetDiscussionComments($discussionId: ID!) {
 		return
 	}
 
-	log.Printf("GitHub Response: %s\n", string(respBody))
+	// log.Printf("GitHub Response: %s\n", string(respBody))
 	var result struct {
 		Data struct {
 			Node struct {
@@ -236,23 +253,27 @@ query GetDiscussionComments($discussionId: ID!) {
 }
 
 type ResolveCommentRequest struct {
-	ID   string `json:"id"`
-	Page string `json:"page"`
+	ID string `json:"id"`
 }
 
 func (h *Handler) Resolve(w http.ResponseWriter, r *http.Request) {
 	log.Println("Resolving a comment")
-	var req ResolveCommentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Println("Invalid request body: ", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
 
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
 		log.Println("GITHUB_TOKEN not set")
 		http.Error(w, "GITHUB_TOKEN not set", http.StatusInternalServerError)
+		return
+	}
+
+	// org := r.PathValue("org")
+	// repo := r.PathValue("repo")
+	page := r.PathValue("page")
+
+	var req ResolveCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Println("Invalid request body: ", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -303,7 +324,7 @@ func (h *Handler) Resolve(w http.ResponseWriter, r *http.Request) {
 
 	body := result.Data.Node.Body
 
-	parsed := parseCommentBody(body, req.Page)
+	parsed := parseCommentBody(body, page)
 
 	updatedBody := fmt.Sprintf(
 		"%s\n\n```json\n%s\n```",
@@ -352,7 +373,7 @@ func (h *Handler) Resolve(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"resolved"}`))
 }
 
-func findOrCreateDiscussion(client *http.Client, token, owner, repo, page string) (string, error) {
+func findOrCreateDiscussion(client *http.Client, token, owner, repo, page, categoryId, repoId string) (string, error) {
 	log.Printf("Looking for discussion for page: %s", page)
 
 	findQuery := `
@@ -417,16 +438,13 @@ mutation CreateDiscussion($repoId: ID!, $title: String!, $body: String!, $catego
   }
 }`
 
-	repoID := os.Getenv("GITHUB_REPO_ID")
-	categoryID := os.Getenv("GITHUB_CATEGORY_ID")
-
 	createReq := GraphQLRequest{
 		Query: createQuery,
 		Variables: map[string]interface{}{
-			"repoId":     repoID,
+			"repoId":     repoId,
 			"title":      fmt.Sprintf("Page: %s", page),
 			"body":       fmt.Sprintf("Discussion for comments on %s", page),
-			"categoryId": categoryID,
+			"categoryId": categoryId,
 		},
 	}
 

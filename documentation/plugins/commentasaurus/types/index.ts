@@ -1,8 +1,3 @@
-const isLocal = true;
-export const API_URL = isLocal
-  ? "http://localhost:8080"
-  : "https://server-image-639487598928.us-east4.run.app";
-
 export type SelectionInfo =
   | {
       type: "TEXT";
@@ -33,6 +28,7 @@ export type BaseComment = {
   text: string;
   contextAfter: string;
   resolved: boolean;
+  user: string;
 };
 
 export type ImageComment = BaseComment & {

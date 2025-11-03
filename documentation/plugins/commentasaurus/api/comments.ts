@@ -1,13 +1,22 @@
-import { API_URL, BaseComment, Comment } from "../types";
+import { BaseComment, Comment } from "../types";
 
 export async function getComments(
+  apiUrl: string,
+  org: string,
+  repoName: string,
+  repoId: string,
+  categoryId: string,
   page: string
 ): Promise<{ comments?: Comment[]; error?: string }> {
   try {
-    const res = await fetch(`${API_URL}/comment?page=${page}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const encodedPage = encodeURIComponent(page);
+    const res = await fetch(
+      `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -15,6 +24,7 @@ export async function getComments(
     }
 
     const data = await res.json();
+    console.log(data);
 
     if (data == null) {
       return {
@@ -32,15 +42,24 @@ export async function getComments(
 }
 
 export async function createComment(
+  apiUrl: string,
+  org: string,
+  repoName: string,
+  repoId: string,
+  categoryId: string,
+  page: string,
   comment: BaseComment
 ): Promise<{ id?: string; error?: string }> {
-  console.log(comment.contextBefore);
   try {
-    const res = await fetch(`${API_URL}/comment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(comment),
-    });
+    const encodedPage = encodeURIComponent(page);
+    const res = await fetch(
+      `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(comment),
+      }
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -57,17 +76,26 @@ export async function createComment(
 }
 
 export async function resolveComment(
+  apiUrl: string,
+  org: string,
+  repoName: string,
+  repoId: string,
+  categoryId: string,
+  page: string,
   comment: BaseComment
 ): Promise<{ error?: string }> {
   try {
-    const res = await fetch(`${API_URL}/comment`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: comment.id,
-        page: comment.page,
-      }),
-    });
+    const encodedPage = encodeURIComponent(page);
+    const res = await fetch(
+      `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: comment.id,
+        }),
+      }
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -76,7 +104,7 @@ export async function resolveComment(
 
     return {};
   } catch (e) {
-    console.log("Create Comment: " + e);
+    console.error(e);
     return { error: e instanceof Error ? e.message : String(e) };
   }
 }

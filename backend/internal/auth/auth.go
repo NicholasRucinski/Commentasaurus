@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/NicholasRucinski/commentasaurus/internal/user"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -45,72 +47,23 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing code", http.StatusBadRequest)
 		return
 	}
-	clientID := os.Getenv("OAUTH_ClIENT_ID")
-	secret := os.Getenv("OAUTH_SECRET")
 
-	data := map[string]string{
-		"client_id":     clientID,
-		"client_secret": secret,
-		"code":          code,
-	}
-
-	client := &http.Client{}
-
-	b, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", bytes.NewBuffer(b))
+	accessToken, err := getAccessToken(code)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
 	}
 
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
+	userData, err := getUserData(accessToken)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
 	}
-	defer resp.Body.Close()
-
-	var tokenResp struct {
-		AccessToken string `json:"access_token"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		http.Error(w, "bad token response", 500)
-		return
-	}
-
-	if tokenResp.AccessToken == "" {
-		http.Error(w, "no access token received", 400)
-		return
-	}
-
-	userReq, _ := http.NewRequest("GET", "https://api.github.com/user", nil)
-	userReq.Header.Set("Authorization", "Bearer "+tokenResp.AccessToken)
-
-	userResp, err := client.Do(userReq)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	defer userResp.Body.Close()
-
-	body, _ := io.ReadAll(userResp.Body)
-	log.Println(string(body))
-	var userData struct {
-		ID        int64  `json:"id"`
-		Login     string `json:"login"`
-		Email     string `json:"email"`
-		AvatarUrl string `json:"avatar_url"`
-	}
-	json.Unmarshal(body, &userData)
 
 	claims := jwt.MapClaims{
 		"user_id":    userData.ID,
-		"name":       userData.Login,
+		"name":       userData.Name,
 		"email":      userData.Email,
 		"avatar_url": userData.AvatarUrl,
+		"orgs":       userData.OrgLogins,
 		"exp":        time.Now().Add(24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -135,13 +88,6 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
-type User struct {
-	ID        int64  `json:"id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	AvatarUrl string `json:"avatar_url"`
-}
-
 func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
@@ -160,7 +106,7 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := User{
+	user := user.User{
 		ID:        int64(claims["user_id"].(float64)),
 		Name:      claims["name"].(string),
 		Email:     claims["email"].(string),
@@ -171,4 +117,87 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"user": user,
 	})
+}
+
+func getAccessToken(code string) (string, error) {
+
+	clientID := os.Getenv("OAUTH_ClIENT_ID")
+	secret := os.Getenv("OAUTH_SECRET")
+
+	data := map[string]string{
+		"client_id":     clientID,
+		"client_secret": secret,
+		"code":          code,
+	}
+
+	client := &http.Client{}
+
+	b, _ := json.Marshal(data)
+	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token", bytes.NewBuffer(b))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var tokenResp struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return "", errors.New("bad token response")
+	}
+
+	if tokenResp.AccessToken == "" {
+		return "", errors.New("no access token received")
+	}
+
+	return tokenResp.AccessToken, nil
+}
+
+func getUserData(accessToken string) (*user.User, error) {
+	client := &http.Client{}
+
+	userReq, _ := http.NewRequest("GET", "https://api.github.com/user", nil)
+	userReq.Header.Set("Authorization", "Bearer "+accessToken)
+
+	userResp, err := client.Do(userReq)
+	if err != nil {
+		return nil, err
+	}
+	defer userResp.Body.Close()
+
+	body, _ := io.ReadAll(userResp.Body)
+	log.Println(string(body))
+	var userData user.User
+	json.Unmarshal(body, &userData)
+
+	userReq, _ = http.NewRequest("GET", "https://api.github.com/user/orgs", nil)
+	userReq.Header.Set("Authorization", "Bearer "+accessToken)
+	orgsResp, err := client.Do(userReq)
+	if err != nil {
+		return nil, err
+	}
+
+	defer orgsResp.Body.Close()
+
+	var orgs []struct {
+		Login string `json:"login"`
+	}
+	json.NewDecoder(orgsResp.Body).Decode(&orgs)
+
+	orgLogins := []string{}
+	for _, org := range orgs {
+		orgLogins = append(orgLogins, org.Login)
+	}
+
+	userData.OrgLogins = orgLogins
+
+	return &userData, nil
 }

@@ -12,9 +12,11 @@ func RegisterRoutes() http.Handler {
 	commentHandler := &comments.Handler{}
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /comment", commentHandler.Create)
-	router.HandleFunc("GET /comment", commentHandler.GetAll)
-	router.HandleFunc("PATCH /comment", commentHandler.Resolve)
+	router.HandleFunc("POST /{org}/{repo}/{page}/comments", commentHandler.Create)
+	router.HandleFunc("GET /{org}/{repo}/{page}/comments", commentHandler.GetAll)
+	router.HandleFunc("PATCH /{org}/{repo}/{page}/comments", commentHandler.Resolve)
+
+	router.HandleFunc("POST /page/config", commentHandler.Config)
 
 	authHandler := &auth.Handler{}
 

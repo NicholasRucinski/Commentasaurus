@@ -1,7 +1,6 @@
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-import sidebars from "./sidebars";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -10,7 +9,26 @@ const config: Config = {
   tagline: "Dinosaurs are awesome",
   favicon: "img/favicon.ico",
 
-  plugins: [require.resolve("./plugins/commentasaurus")],
+  plugins: [
+    [
+      require.resolve("./plugins/commentasaurus"),
+      {
+        // The url for the API. Default is Localhost:8080
+        // apiUrl: "https://server-image-639487598928.us-east4.run.app",
+        // Should the comment sidebar be shown by default
+        autoShowComments: false,
+        // Sets the permissions for who can comment
+        // [anon] - Anonymous users can comment
+        // [auth] - Only authenticated users can comment
+        // [team] - Only people with access to the org can comment
+        commentPermission: "anon",
+        repoName: "Commentasaurus",
+        repoOwner: "NicholasRucinski",
+        repoID: "R_kgDOO_Stlg",
+        repoCategoryId: "DIC_kwDOO_Stls4CxCMV",
+      },
+    ],
+  ],
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
