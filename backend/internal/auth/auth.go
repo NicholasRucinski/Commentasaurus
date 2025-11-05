@@ -92,7 +92,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(24 * time.Hour),
 	})
 
@@ -102,7 +102,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(24 * time.Hour),
 	})
 
