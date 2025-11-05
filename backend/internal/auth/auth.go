@@ -48,6 +48,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 	encryptionKey := []byte(os.Getenv("COOKIE_KEY"))
 	if len(encryptionKey) != 32 {
 		log.Println("FATAL: COOKIE_ENCRYPTION_KEY is not 32 bytes")
+		log.Println(len(encryptionKey))
 		http.Error(w, "server configuration error", 500)
 		return
 	}

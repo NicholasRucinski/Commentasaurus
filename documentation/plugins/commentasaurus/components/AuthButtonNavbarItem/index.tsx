@@ -20,15 +20,13 @@ export default function AuthButtonNavbarItem() {
   };
 
   return (
-    <BrowserOnly>
-      {() =>
-        user ? (
-          <UserImage user={user} handleSignOut={handleSignOut} />
-        ) : (
-          <SignInButton handleSignIn={handleSignIn} />
-        )
-      }
-    </BrowserOnly>
+    <>
+      {user ? (
+        <UserImage user={user} handleSignOut={handleSignOut} />
+      ) : (
+        <SignInButton handleSignIn={handleSignIn} />
+      )}
+    </>
   );
 }
 
