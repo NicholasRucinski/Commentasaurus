@@ -13,6 +13,7 @@ export async function getComments(
     const res = await fetch(
       `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
       {
+        credentials: "include",
         method: "GET",
         headers: { "Content-Type": "application/json" },
       }
@@ -55,18 +56,19 @@ export async function createComment(
     const res = await fetch(
       `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
       {
+        credentials: "include",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(comment),
       }
     );
+    const data = await res.json();
+    console.log(data);
 
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`Error ${res.status}: ${text}`);
     }
-
-    const data = await res.json();
 
     return { id: data };
   } catch (e) {
@@ -89,6 +91,7 @@ export async function resolveComment(
     const res = await fetch(
       `${apiUrl}/${org}/${repoName}/${encodedPage}/comments?category_id=${categoryId}&repo_id=${repoId}`,
       {
+        credentials: "include",
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

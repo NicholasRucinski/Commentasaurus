@@ -2,7 +2,8 @@ import React from "react";
 import styles from "./styles.module.css";
 import { User } from "../../types";
 import { useUser } from "../../contexts/UserContext";
-import { useCommentasaurusConfig } from "../hooks/useConfig";
+import BrowserOnly from "@docusaurus/BrowserOnly";
+import { useCommentasaurusConfig } from "../../hooks/useConfig";
 
 export default function AuthButtonNavbarItem() {
   const { user, setUser } = useUser();
@@ -19,13 +20,15 @@ export default function AuthButtonNavbarItem() {
   };
 
   return (
-    <>
-      {user ? (
-        <UserImage user={user} handleSignOut={handleSignOut} />
-      ) : (
-        <SignInButton handleSignIn={handleSignIn} />
-      )}
-    </>
+    <BrowserOnly>
+      {() =>
+        user ? (
+          <UserImage user={user} handleSignOut={handleSignOut} />
+        ) : (
+          <SignInButton handleSignIn={handleSignIn} />
+        )
+      }
+    </BrowserOnly>
   );
 }
 

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "../types";
 import { getUser } from "../api/user";
-import { useCommentasaurusConfig } from "../components/hooks/useConfig";
+import { useCommentasaurusConfig } from "../hooks/useConfig";
 
 interface UserContextType {
   user: User | null;

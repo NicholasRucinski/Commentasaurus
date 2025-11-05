@@ -1,4 +1,4 @@
-import { BaseComment, PositionedComment } from "../types";
+import { BaseComment, PositionedComment } from "../../types";
 import styles from "./styles.module.css";
 
 interface DraftCommentProps {

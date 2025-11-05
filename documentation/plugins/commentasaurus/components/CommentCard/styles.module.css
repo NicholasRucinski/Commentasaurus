@@ -1,0 +1,58 @@
+.commentCard {
+  position: absolute;
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.commentCard:hover {
+  background: #fdfdfd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  border-color: #d1d5db;
+}
+
+.commentCardInput {
+  width: 100%;
+  min-height: 70px;
+  border: 1px solid #d1d5db;
+  background-color: #fafafa;
+  padding: 8px 10px;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.commentCardInput:focus {
+  outline: none;
+  border-color: #08aaea;
+  background-color: #fff;
+}
+
+.resolveButton{
+  background-color: #16f4aa8a;
+  border: 1px solid #059669;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resolveButton:hover {
+  background-color: #12dd99; 
+  border-color: #059669;
+}
+
+.resolveButton:active {
+  background-color: #059669;
+}

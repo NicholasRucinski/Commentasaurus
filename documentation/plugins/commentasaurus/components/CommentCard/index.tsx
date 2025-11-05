@@ -1,5 +1,6 @@
+import { BaseComment, PositionedComment } from "../../types";
 import styles from "./styles.module.css";
-import { BaseComment, PositionedComment } from "../types";
+import highlightStyles from "../MDXContentWithComments/styles.module.css";
 
 interface CommentCardProps {
   card: PositionedComment;
@@ -14,12 +15,12 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
       onMouseEnter={() =>
         document
           .querySelector(`[data-comment-id="${card.id}"]`)
-          ?.classList.add(styles.hovered)
+          ?.classList.add(highlightStyles.hovered)
       }
       onMouseLeave={() =>
         document
           .querySelector(`[data-comment-id="${card.id}"]`)
-          ?.classList.remove(styles.hovered)
+          ?.classList.remove(highlightStyles.hovered)
       }
       onClick={() =>
         document
@@ -31,6 +32,9 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
         <strong>“{card.text}”</strong>
       </p>
       <p>{card.comment}</p>
+      <p>
+        <em>-{card.user}</em>
+      </p>
       <div>
         <button
           className={styles.resolveButton}

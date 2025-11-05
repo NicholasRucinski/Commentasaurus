@@ -1,5 +1,5 @@
-import styles from "../styles.module.css";
-import { Comment } from "../../types";
+import styles from "../components/MDXContentWithComments/styles.module.css";
+import { Comment } from "../types";
 
 export function restoreHighlights(comments: Comment[]) {
   const activeIds = new Set(comments.map((c) => c.id));

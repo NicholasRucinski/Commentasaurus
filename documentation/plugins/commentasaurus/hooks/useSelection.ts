@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { SelectionInfo } from "../../types";
+import { SelectionInfo } from "../types";
 
-export function useSelection() {
+export function useSelection(): {
+  selectionInfo: SelectionInfo | null;
+  clearSelection: () => void;
+} {
   const [selectionInfo, setSelectionInfo] = useState<SelectionInfo | null>(
     null
   );

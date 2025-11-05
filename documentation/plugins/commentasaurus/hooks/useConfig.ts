@@ -1,5 +1,5 @@
 import { usePluginData } from "@docusaurus/useGlobalData";
-import { CommentasaurusConfig, CommentPermission } from "../..";
+import { CommentasaurusConfig } from "..";
 
 export function useCommentasaurusConfig(): Required<CommentasaurusConfig> {
   const config = usePluginData("commentasaurus") as CommentasaurusConfig;

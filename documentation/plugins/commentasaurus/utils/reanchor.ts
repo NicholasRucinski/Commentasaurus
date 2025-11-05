@@ -1,10 +1,13 @@
-import { Comment } from "../../types";
+import { Comment } from "../types";
 
-export function reanchorComments(comments: Comment[]): Comment[] {
+export function reanchorComments(
+  comments: Comment[],
+  rootNode: Node | null
+): Comment[] {
   return comments.map((comment) => {
     if (!comment.text) return comment;
 
-    const y = findTextPosition(comment);
+    const y = findTextPosition(comment, rootNode);
     if (!y) return comment;
 
     return {
@@ -14,7 +17,10 @@ export function reanchorComments(comments: Comment[]): Comment[] {
   });
 }
 
-function findTextPosition(comment: Comment): number | null {
+function findTextPosition(
+  comment: Comment,
+  rootNode: Node | null
+): number | null {
   const { contextBefore, text, contextAfter } = comment;
   const before = contextBefore?.trim() || "";
   const middle = text?.trim() || "";
@@ -22,7 +28,7 @@ function findTextPosition(comment: Comment): number | null {
 
   if (!middle) return null;
 
-  const allTextNodes = getAllTextNodes(document.body);
+  const allTextNodes = getAllTextNodes(rootNode);
 
   const searchVariants = [
     { full: `${before} ${middle} ${after}`.trim(), match: middle },
@@ -32,6 +38,9 @@ function findTextPosition(comment: Comment): number | null {
   ];
 
   for (const node of allTextNodes) {
+    if (node.parentElement?.closest("#comment-sidebar")) {
+      continue;
+    }
     const textContent = node.textContent || "";
 
     for (const { full, match } of searchVariants) {

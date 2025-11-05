@@ -1,4 +1,4 @@
-import { Comment } from "../../types";
+import { Comment } from "../types";
 
 const STORAGE_KEY = "highlight-comments";
 

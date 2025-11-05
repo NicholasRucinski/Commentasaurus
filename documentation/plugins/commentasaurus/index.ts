@@ -15,6 +15,7 @@ export interface CommentasaurusConfig {
   repoOwner?: string;
   repoID?: string;
   repoCategoryId?: string;
+  deleteOnResolve?: boolean;
 }
 
 module.exports = function commentasaurusPlugin(
@@ -29,6 +30,7 @@ module.exports = function commentasaurusPlugin(
     repoOwner: "",
     repoID: "",
     repoCategoryId: "",
+    deleteOnResolve: false,
   };
 
   const finalConfig = { ...defaults, ...options };
