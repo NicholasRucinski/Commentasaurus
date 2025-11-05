@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/NicholasRucinski/commentasaurus/internal/crypto"
 	"github.com/NicholasRucinski/commentasaurus/internal/user"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -34,13 +35,22 @@ func (h *Handler) StartAuth(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	redirectUrl := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&scope=read:user user:email", clientID)
+	scopes := "read:user user:email public_repo"
+
+	redirectUrl := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&scope=%s", clientID, scopes)
 
 	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
 
 }
 
 func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
+
+	encryptionKey := []byte(os.Getenv("COOKIE_KEY"))
+	if len(encryptionKey) != 32 {
+		log.Println("FATAL: COOKIE_ENCRYPTION_KEY is not 32 bytes")
+		http.Error(w, "server configuration error", 500)
+		return
+	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
@@ -69,9 +79,25 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
+	encryptedToken, err := crypto.Encrypt(encryptionKey, accessToken)
+	if err != nil {
+		http.Error(w, "failed to secure token", 500)
+		return
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session",
 		Value:    signed,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "github_token",
+		Value:    encryptedToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,

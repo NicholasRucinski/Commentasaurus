@@ -16,7 +16,8 @@ func RegisterRoutes() http.Handler {
 	router.HandleFunc("GET /{org}/{repo}/{page}/comments", commentHandler.GetAll)
 	router.HandleFunc("PATCH /{org}/{repo}/{page}/comments", commentHandler.Resolve)
 
-	router.HandleFunc("POST /page/config", commentHandler.Config)
+	router.HandleFunc("POST /{org}/{repo}/permissions", commentHandler.Permissions)
+	router.HandleFunc("GET /{org}/{repo}/setup", commentHandler.Setup)
 
 	authHandler := &auth.Handler{}
 
