@@ -89,6 +89,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session",
 		Value:    signed,
+		Domain:   ".nickrucinski.com",
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
@@ -99,6 +100,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "github_token",
 		Value:    encryptedToken,
+		Domain:   ".nickrucinski.com",
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,

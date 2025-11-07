@@ -102,15 +102,17 @@ This project is licensed under the MIT License. See [LICENSE](https://github.com
 [//]: # " readme: collaborators -start "
 
 <table>
-<tr>
-    <td align="center">
-        <a href="https://github.com/NicholasRucinski">
-            <img src="https://avatars.githubusercontent.com/u/48574032?v=4" width="100;" alt="Nick"/>
-            <br />
-            <sub><b>Nick Rucinski</b></sub>
-        </a>
-    </td>
-</tr>
+    <tbody>
+        <tr>
+            <td align="center">
+                <a href="https://github.com/NicholasRucinski">
+                    <img src="https://avatars.githubusercontent.com/u/48574032?v=4" width="100;" alt="Nick"/>
+                    <br />
+                    <sub><b>Nick Rucinski</b></sub>
+                </a>
+            </td>
+        </tr>
+    </tbody>
 </table>
 
 [//]: # " readme: collaborators -end "
