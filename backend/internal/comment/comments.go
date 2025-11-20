@@ -89,7 +89,9 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	tokenCookie, err := r.Cookie("github_token")
 	if err != nil {
-		http.Error(w, "unauthorized: missing token", http.StatusUnauthorized)
+		log.Println(err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]utils.Comment{})
 		return
 	}
 

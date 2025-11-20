@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/NicholasRucinski/commentasaurus/internal/crypto"
@@ -86,27 +87,36 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	isLocalHost := strings.Contains(r.Host, "localhost")
+
+	sessionCookie := &http.Cookie{
 		Name:     "session",
 		Value:    signed,
-		Domain:   ".nickrucinski.com",
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(24 * time.Hour),
-	})
+	}
 
-	http.SetCookie(w, &http.Cookie{
+	githubCookie := &http.Cookie{
 		Name:     "github_token",
 		Value:    encryptedToken,
-		Domain:   ".nickrucinski.com",
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(24 * time.Hour),
-	})
+	}
+
+	if !isLocalHost {
+		sessionCookie.Domain = ".nickrucinski.com"
+		sessionCookie.Secure = true
+		sessionCookie.SameSite = http.SameSiteNoneMode
+
+		githubCookie.Domain = ".nickrucinski.com"
+		githubCookie.Secure = true
+		githubCookie.SameSite = http.SameSiteNoneMode
+	}
+
+	http.SetCookie(w, sessionCookie)
+	http.SetCookie(w, githubCookie)
 
 	redirectAfter, err := r.Cookie("redirect_after_login")
 	redirectURL := "http://localhost:3000"
@@ -120,7 +130,10 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		log.Println(err)
+		json.NewEncoder(w).Encode(map[string]any{
+			"user": nil,
+		})
 		return
 	}
 
@@ -131,6 +144,7 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil || !token.Valid {
+
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
 	}
