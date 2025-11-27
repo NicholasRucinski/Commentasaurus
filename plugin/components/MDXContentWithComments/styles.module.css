@@ -1,0 +1,51 @@
+
+
+.commentLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.commentSidebar {
+  display: block;
+  align-items: stretch;
+}
+
+.portal {
+  position: absolute;
+  background: #fcd745ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: "pointer";
+  z-index: 9999;
+  font-weight: bold;
+  border: 1px solid #888;
+}
+
+.portal:hover {
+  background: rgb(228, 195, 62);
+}
+
+.highlightedText {
+  background-color: #fff8c2;
+  transition: background-color 0.2s ease;
+}
+
+.highlightedText.hovered {
+  background-color: #fde047;
+}
+
+.highlightedImage {
+  display: inline-block;
+  position: relative;
+  outline: 3px solid #fde047;
+  outline-offset: 2px;
+  border-radius: 4px;
+  transition: outline-color 0.2s ease, outline-width 0.2s ease;
+}
+
+.highlightedImage.hovered {
+  outline-width: 4px;
+  outline-color: #eab308;
+}

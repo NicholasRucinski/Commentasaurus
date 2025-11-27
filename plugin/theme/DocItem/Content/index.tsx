@@ -1,13 +1,12 @@
-import React, { type ReactNode } from "react";
-import clsx from "clsx";
-import { ThemeClassNames } from "@docusaurus/theme-common";
+import { type ReactNode } from "react";
 import { useDoc } from "@docusaurus/plugin-content-docs/client";
+import type { Props } from "@theme/DocItem/Content";
+import ContentWithComments from "@site/plugins/commentasaurus/components/MDXContentWithComments";
+import BrowserOnly from "@docusaurus/BrowserOnly";
+import clsx from "clsx";
 import Heading from "@theme/Heading";
 import MDXContent from "@theme/MDXContent";
-import type { Props } from "@theme/DocItem/Content";
-import styles from "./styles.module.css";
-import HighlightComments from "@site/plugins/commentasaurus/components/HighlightComments";
-
+import { ThemeClassNames } from "@docusaurus/theme-common";
 /**
  Title can be declared inside md content or declared through
  front matter and added manually. To make both cases consistent,
@@ -30,6 +29,7 @@ function useSyntheticTitle(): string | null {
 
 export default function DocItemContent({ children }: Props): ReactNode {
   const syntheticTitle = useSyntheticTitle();
+
   return (
     <div className={clsx(ThemeClassNames.docs.docMarkdown, "markdown")}>
       {syntheticTitle && (
@@ -38,14 +38,9 @@ export default function DocItemContent({ children }: Props): ReactNode {
         </header>
       )}
 
-      <div style={{ display: "flex", alignItems: "stretch" }}>
-        <div style={{ flex: 1 }}>
-          <MDXContent>{children}</MDXContent>
-        </div>
-        <div className={styles.commentSidebar}>
-          <HighlightComments />
-        </div>
-      </div>
+      <BrowserOnly fallback={<MDXContent>{children}</MDXContent>}>
+        {() => <ContentWithComments>{children}</ContentWithComments>}
+      </BrowserOnly>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 export type SelectionInfo =
   | {
       type: "TEXT";
+      contextBefore: string;
       text: string;
+      contextAfter: string;
       range: Range;
       x: number;
       y: number;
@@ -9,7 +11,9 @@ export type SelectionInfo =
   | {
       type: "IMAGE";
       node: HTMLImageElement;
+      contextBefore: string;
       text: string;
+      contextAfter: string;
       x: number;
       y: number;
     }
@@ -17,10 +21,14 @@ export type SelectionInfo =
 
 export type BaseComment = {
   id: string;
-  comment: string;
-  text: string;
-  y: number;
   page: string;
+  comment: string;
+  y: number;
+  contextBefore: string;
+  text: string;
+  contextAfter: string;
+  resolved: boolean;
+  user: string;
 };
 
 export type ImageComment = BaseComment & {
@@ -37,3 +45,10 @@ export type Comment = ImageComment | TextComment;
 export interface PositionedComment extends BaseComment {
   top: number;
 }
+
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  avatar_url: string;
+};

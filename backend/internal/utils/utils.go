@@ -21,6 +21,7 @@ type Comment struct {
 	Comment       string `json:"comment"`
 	User          string `json:"user,omitempty"`
 	Resolved      bool   `json:"resolved"`
+	CreatedAt     string `json:"createdAt"`
 }
 
 type GraphQLRequest struct {
@@ -116,6 +117,7 @@ query GetDiscussionComments($discussionId: ID!) {
 						Author struct {
 							Login string `json:"login"`
 						} `json:"author"`
+						CreatedAt string `json:"createdAt"`
 					} `json:"nodes"`
 				} `json:"comments"`
 			} `json:"node"`
@@ -144,6 +146,7 @@ query GetDiscussionComments($discussionId: ID!) {
 				Comment:       parsed["comment"],
 				User:          node.Author.Login,
 				Resolved:      resolved,
+				CreatedAt:     node.CreatedAt,
 			})
 		}
 	}

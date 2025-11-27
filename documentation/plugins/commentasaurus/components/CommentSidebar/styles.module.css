@@ -14,13 +14,10 @@
   flex-direction: column;
   border-left: 1px solid #1d1d1d;
   transition: transform 0.3s ease;
-  z-index: 10;
 }
 
 .commentLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
 }
 
