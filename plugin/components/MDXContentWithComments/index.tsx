@@ -70,7 +70,8 @@ export default function ContentWithComments({ children }: Props) {
             repoName,
             repoID,
             repoCategoryId,
-            window.location.pathname
+            window.location.pathname,
+            commentPermission
           );
 
         if (loadError) {
@@ -118,22 +119,6 @@ export default function ContentWithComments({ children }: Props) {
     [clearSelection]
   );
 
-  // const getCommentPositions = (comments: Comment[]) => {
-  //   const sorted = [...comments].sort((a, b) => a.y - b.y);
-  //   let lastY = 0;
-  //   return sorted.map((c) => {
-  //     let top = c.y - 270;
-  //     if (top < lastY) top = lastY;
-  //     lastY = top + COMMENT_CARD_HEIGHT + COMMENT_CARD_SPACING;
-  //     return { ...c, top };
-  //   });
-  // };
-
-  // const positionedComments = useMemo(
-  //   () => getCommentPositions(comments),
-  //   [comments]
-  // );
-
   const onResolveComment = (comment: BaseComment) => {
     const resolve = async () => {
       const { error } = await resolveComment(
@@ -166,6 +151,7 @@ export default function ContentWithComments({ children }: Props) {
       top: selectionInfo.y - 270,
       resolved: false,
       user: user.name,
+      createdAt: Date.now().toString(),
     };
     setDraftComment(draft);
   }, [selectionInfo]);
@@ -218,9 +204,9 @@ export default function ContentWithComments({ children }: Props) {
           draftComment={draftComment}
           comments={comments}
           setShowSidebar={handleSetShowSidebar}
-          setDraftComment={() => setDraftComment}
+          setDraftComment={setDraftComment}
           handleAddComment={handleAddComment}
-          onResolveComment={() => onResolveComment}
+          onResolveComment={onResolveComment}
         />
       </div>
     </div>

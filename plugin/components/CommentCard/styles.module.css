@@ -1,6 +1,7 @@
 .commentCard {
   position: absolute;
   width: calc(100% - 24px);
+  /* max-height: 180px; */
   margin: 0 12px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -9,6 +10,29 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   cursor: pointer;
+}
+
+.header {
+  margin-bottom: 4px;
+}
+
+.preview {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.4;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  color: var(--ifm-color-emphasis-600);
 }
 
 .commentCard:hover {
@@ -34,6 +58,15 @@
   outline: none;
   border-color: #08aaea;
   background-color: #fff;
+}
+
+.showMoreButton {
+  background: none;
+  border: none;
+  color: #0070f3;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 8px;
 }
 
 .resolveButton{

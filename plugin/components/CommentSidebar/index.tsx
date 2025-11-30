@@ -1,4 +1,10 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "./styles.module.css";
 import DraftComment from "../DraftCommentCard";
 import CommentCard from "../CommentCard";
@@ -15,15 +21,6 @@ export default function CommentsSidebar({
   setDraftComment,
   handleAddComment,
   onResolveComment,
-}: {
-  canSeeComments: boolean;
-  showSidebar: boolean;
-  draftComment: PositionedComment;
-  comments: Comment[];
-  setShowSidebar: (show: boolean) => void;
-  setDraftComment: () => void;
-  handleAddComment: (draft: BaseComment) => Promise<void>;
-  onResolveComment: () => void;
 }) {
   const commentRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [positions, setPositions] = useState<Record<string, number>>({});

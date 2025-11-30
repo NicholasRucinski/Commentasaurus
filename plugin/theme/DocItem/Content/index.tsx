@@ -41,6 +41,7 @@ export default function DocItemContent({ children }: Props): ReactNode {
       <BrowserOnly fallback={<MDXContent>{children}</MDXContent>}>
         {() => <ContentWithComments>{children}</ContentWithComments>}
       </BrowserOnly>
+      <div id="modal-root"></div>
     </div>
   );
 }
