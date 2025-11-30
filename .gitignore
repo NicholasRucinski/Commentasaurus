@@ -1,1 +1,28 @@
+# Binaries and temp files
+/tmp
+/tmp/*
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build artifacts
+bin/
+main
+*.log
+
+# IDE/editor junk
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# dotenv and secrets
 .env
+.env.*
+
+# Air build files
+tmp/

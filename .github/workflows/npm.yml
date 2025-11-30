@@ -1,30 +1,38 @@
-name: Push to npm
+name: Publish to npm
 
 on:
   push:
-    branches: ["main"]
+    tags:
+      - 'v*'
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name:
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Install Deps
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
         run: |
-          cd documentation
-          npm i
+          cd plugin
+          npm ci
 
-      - name: npm ci
-      - name: npm publish --provenance --access publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish package
+        run: |
+          cd plugin
+          npm publish
+

@@ -87,19 +87,27 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	encryptionKey := []byte(os.Getenv("COOKIE_KEY"))
 
-	tokenCookie, err := r.Cookie("github_token")
-	if err != nil {
-		log.Println(err)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode([]utils.Comment{})
-		return
-	}
+	permissionLevel := r.URL.Query().Get("permission_level")
+	var githubToken string
 
-	githubToken, err := crypto.Decrypt(encryptionKey, tokenCookie.Value)
-	if err != nil {
-		log.Printf("Failed to decrypt token: %v", err)
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
+	if permissionLevel != "anon" {
+		tokenCookie, err := r.Cookie("github_token")
+		if err != nil {
+			log.Println(err)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode([]utils.Comment{})
+			return
+		}
+
+		githubToken, err = crypto.Decrypt(encryptionKey, tokenCookie.Value)
+		if err != nil {
+			log.Printf("Failed to decrypt token: %v", err)
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+
+	} else {
+		githubToken = os.Getenv("GITHUB_TOKEN")
 	}
 
 	categoryId := r.URL.Query().Get("category_id")

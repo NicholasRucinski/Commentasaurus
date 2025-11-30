@@ -4,7 +4,8 @@ import highlightStyles from "../MDXContentWithComments/styles.module.css";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface CommentCardProps {
   card: Comment;
@@ -40,7 +41,6 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
             ?.classList.remove(highlightStyles.hovered)
         }
       >
-        {/* --- HEADER --- */}
         <div className={styles.header}>
           <strong className={styles.quotedText}>
             “{cutOfText}
@@ -48,7 +48,6 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
           </strong>
         </div>
 
-        {/* --- PREVIEW --- */}
         <div className={styles.preview}>
           {plainTextPreview}
           {isCommentOverflowing && "…"}
@@ -66,7 +65,6 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
           </button>
         )}
 
-        {/* --- FOOTER (metadata & actions) --- */}
         <div className={styles.footer}>
           <div className={styles.meta}>
             <span className={styles.author}>- {card.user}</span>
@@ -96,43 +94,24 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
 
 export default CommentCard;
 
-function CommentModal({
-  open,
-  onClose,
-  card,
-}: {
-  open: boolean;
-  onClose: () => void;
-  card: Comment;
-}) {
+const CommentModal = ({ open, onClose, card }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
 
   if (!open) return null;
 
-  function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === overlayRef.current) {
       onClose();
     }
-  }
+  };
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         background: "rgba(0,0,0,0.4)",
         padding: "40px",
         zIndex: 9999,
@@ -149,7 +128,6 @@ function CommentModal({
           marginBottom: "15%",
           borderRadius: "10px",
           maxWidth: "700px",
-          zIndex: 9999,
           width: "100%",
           boxShadow: "0 4px 30px rgba(0,0,0,0.2)",
         }}
@@ -168,9 +146,10 @@ function CommentModal({
           Close
         </button>
       </div>
-    </div>
+    </div>,
+    document.getElementById("modal-root")!
   );
-}
+};
 
 function timeAgo(dateString: string): string {
   const date = new Date(dateString);

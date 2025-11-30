@@ -70,7 +70,8 @@ export default function ContentWithComments({ children }: Props) {
             repoName,
             repoID,
             repoCategoryId,
-            window.location.pathname
+            window.location.pathname,
+            commentPermission
           );
 
         if (loadError) {
@@ -150,6 +151,7 @@ export default function ContentWithComments({ children }: Props) {
       top: selectionInfo.y - 270,
       resolved: false,
       user: user.name,
+      createdAt: Date.now().toString(),
     };
     setDraftComment(draft);
   }, [selectionInfo]);
