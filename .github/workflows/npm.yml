@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd plugin
-          npm ci
+          npm i
 
       - name: Publish package
         run: |
