@@ -10,6 +10,7 @@ import { PositionedComment, Comment, BaseComment } from "../../types";
 import { useSelection } from "../../hooks/useSelection";
 import { useUser } from "../../contexts/UserContext";
 import { useCommentasaurusConfig } from "../../hooks/useConfig";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { isUserAllowed } from "../../api/user";
 import { createComment, getComments, resolveComment } from "../../api/comments";
 import { reanchorComments } from "../../utils/reanchor";
@@ -21,6 +22,16 @@ import { createPortal } from "react-dom";
 import type { Props } from "@theme/DocItem/Content";
 
 export default function ContentWithComments({ children }: Props) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileView>{children}</MobileView>;
+  }
+
+  return <DesktopView>{children}</DesktopView>;
+}
+
+function DesktopView({ children }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -211,4 +222,8 @@ export default function ContentWithComments({ children }: Props) {
       </div>
     </div>
   );
+}
+
+function MobileView({ children }: Props) {
+  return <MDXContent>{children}</MDXContent>;
 }
