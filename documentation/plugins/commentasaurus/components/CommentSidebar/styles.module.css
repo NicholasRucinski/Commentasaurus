@@ -36,6 +36,10 @@
   transition: right 0.3s ease, opacity 0.3s ease;
 }
 
+.toggleButton:hover {
+  background: #1e4fba;
+}
+
 .toggleHide {
   right: 100%;
   top: 2%;

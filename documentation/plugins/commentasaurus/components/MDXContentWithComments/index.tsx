@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { PositionedComment, Comment, BaseComment } from "../../types";
 import { useSelection } from "../../hooks/useSelection";
 import { useUser } from "../../contexts/UserContext";
@@ -20,18 +13,115 @@ import MDXContent from "@theme/MDXContent";
 import styles from "./styles.module.css";
 import { createPortal } from "react-dom";
 import type { Props } from "@theme/DocItem/Content";
+import CommentCard from "../CommentCard";
+import { CommentsContext, useComments } from "../../hooks/useComments";
 
 export default function ContentWithComments({ children }: Props) {
   const isMobile = useIsMobile();
 
-  if (isMobile) {
-    return <MobileView>{children}</MobileView>;
-  }
-
-  return <DesktopView>{children}</DesktopView>;
+  return (
+    <CommentsController>
+      {isMobile ? (
+        <MobileLayout>{children}</MobileLayout>
+      ) : (
+        <DesktopLayout>{children}</DesktopLayout>
+      )}
+    </CommentsController>
+  );
 }
 
-function DesktopView({ children }: Props) {
+function DesktopLayout({ children }: Props) {
+  const { comments, draftComment, setDraftComment } = useComments();
+  const [showSide, setShowSidebar] = useState<boolean>(true);
+  return (
+    <div style={{ display: "flex", alignItems: "stretch" }}>
+      <Content>{children}</Content>
+
+      <div className={styles.commentSidebar}>
+        <CommentsSidebar
+          comments={comments}
+          canSeeComments={true}
+          showSidebar={showSide}
+          setShowSidebar={setShowSidebar}
+          draftComment={draftComment}
+          setDraftComment={setDraftComment}
+          handleAddComment={() => {}}
+          onResolveComment={() => {}}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MobileLayout({ children }: Props) {
+  const { open, setOpen } = useComments();
+
+  return (
+    <>
+      <Content>{children}</Content>
+
+      <button
+        className={styles.mobileCommentButton}
+        onClick={() => setOpen(true)}
+      >
+        💬
+      </button>
+
+      <BottomDrawer open={open} onClose={() => setOpen(false)}>
+        <CommentsPanel />
+      </BottomDrawer>
+    </>
+  );
+}
+
+function Content({ children }: Props) {
+  const { contentRef, canComment, selectionInfo, setDraftComment, setOpen } =
+    useComments();
+
+  const handleAddComment = () => {
+    if (!selectionInfo) return;
+
+    setOpen(true);
+
+    setDraftComment({
+      id: crypto.randomUUID(),
+      page: window.location.pathname,
+      comment: "",
+      y: selectionInfo.y,
+      contextBefore: "",
+      text: selectionInfo.text,
+      contextAfter: "",
+      resolved: false,
+      user: "me",
+      createdAt: Date.now().toString(),
+      top: 10,
+    });
+  };
+
+  return (
+    <div ref={contentRef} className={styles.content}>
+      {canComment &&
+        selectionInfo &&
+        createPortal(
+          <button
+            className={styles.addCommentButton}
+            style={{
+              top: selectionInfo.y - 40,
+              left: selectionInfo.x,
+            }}
+            onClick={handleAddComment}
+          >
+            Add comment
+          </button>,
+          document.body
+        )}
+
+      <MDXContent>{children}</MDXContent>
+    </div>
+  );
+}
+
+function CommentsController({ children }: { children: React.ReactNode }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -39,6 +129,7 @@ function DesktopView({ children }: Props) {
   const [draftComment, setDraftComment] = useState<PositionedComment | null>(
     null
   );
+
   const { selectionInfo, clearSelection } = useSelection();
   const { user } = useUser();
 
@@ -51,13 +142,16 @@ function DesktopView({ children }: Props) {
     repoCategoryId,
     commentPermission,
   } = useCommentasaurusConfig();
-  const [canComment, setCanComment] = useState<boolean>(false);
-  const [canSeeComments, setCanSeeComments] = useState<boolean>(false);
-  const [showSidebar, setShowSidebar] = useState<boolean>(autoShowComments);
+
+  const [canComment, setCanComment] = useState(false);
+  const [canSeeComments, setCanSeeComments] = useState(false);
+  const [open, setOpen] = useState(autoShowComments);
 
   useEffect(() => {
-    const fetchData = async (rootNode: HTMLElement | null) => {
-      const { allowed, error: permError } = await isUserAllowed(
+    if (!contentRef.current) return;
+
+    (async () => {
+      const { allowed } = await isUserAllowed(
         apiUrl,
         repoOwner,
         repoName,
@@ -65,165 +159,95 @@ function DesktopView({ children }: Props) {
         commentPermission
       );
 
-      if (permError) {
-        console.error("Permission check failed:", permError);
-        return;
-      }
-
       setCanComment(allowed);
       setCanSeeComments(allowed);
 
-      if (allowed) {
-        const { comments: loadedComments, error: loadError } =
-          await getComments(
-            apiUrl,
-            repoOwner,
-            repoName,
-            repoID,
-            repoCategoryId,
-            window.location.pathname,
-            commentPermission
-          );
+      if (!allowed) return;
 
-        if (loadError) {
-          console.error("Failed to load comments:", loadError);
-          return;
-        }
-        setRawComments(loadedComments);
-        const anchored = reanchorComments(loadedComments, rootNode);
-        setComments(anchored);
-      }
-    };
-    if (contentRef.current) {
-      fetchData(contentRef.current);
-    }
-  }, [window.location.pathname, user, contentRef.current]);
+      const { comments } = await getComments(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        commentPermission
+      );
+
+      setRawComments(comments);
+      setComments(reanchorComments(comments, contentRef.current));
+    })();
+  }, [user]);
 
   useEffect(() => {
     restoreHighlights(comments);
-  }, [comments, contentRef.current]);
+  }, [comments]);
 
-  const handleAddComment = useCallback(
-    async (draft: BaseComment) => {
-      const { id, error } = await createComment(
-        apiUrl,
-        repoOwner,
-        repoName,
-        repoID,
-        repoCategoryId,
-        window.location.pathname,
-        draft
-      );
-      if (!id || error) {
-        console.error("error creating comment: ", error);
+  const value = {
+    contentRef,
 
-        setDraftComment(null);
-        clearSelection();
-        return;
-      }
-      if (!draft.comment.trim()) return;
-      const newComment: Comment = { id: id, ...draft, type: "TEXT" };
-      setComments((prev) => [...prev, newComment]);
-      setDraftComment(null);
-      clearSelection();
-    },
-    [clearSelection]
-  );
+    comments,
+    setComments,
 
-  const onResolveComment = (comment: BaseComment) => {
-    const resolve = async () => {
-      const { error } = await resolveComment(
-        apiUrl,
-        repoOwner,
-        repoName,
-        repoID,
-        repoCategoryId,
-        window.location.pathname,
-        comment
-      );
-      if (error) {
-      }
-    };
-    resolve();
-    setComments((prev) => prev.filter((c) => c.id !== comment.id));
+    draftComment,
+    setDraftComment,
+
+    canComment,
+    canSeeComments,
+
+    open,
+    setOpen,
+
+    selectionInfo,
+    clearSelection,
   };
 
-  const handleAddCommentClick = useCallback(() => {
-    if (!selectionInfo) return;
-    if (!showSidebar) setShowSidebar(true);
-    const draft: PositionedComment = {
-      id: crypto.randomUUID(),
-      page: window.location.pathname,
-      y: selectionInfo.y,
-      comment: "",
-      contextBefore: selectionInfo.contextBefore,
-      text: selectionInfo.text,
-      contextAfter: selectionInfo.contextAfter,
-      top: selectionInfo.y - 270,
-      resolved: false,
-      user: user.name,
-      createdAt: Date.now().toString(),
-    };
-    setDraftComment(draft);
-  }, [selectionInfo]);
-
-  const handleSetShowSidebar = useCallback(
-    (show: boolean) => {
-      setShowSidebar(show);
-
-      if (show) {
-        setComments([]);
-
-        setTimeout(() => {
-          setComments(reanchorComments(rawComments, contentRef.current));
-        }, 25);
-      }
-    },
-    [rawComments, contentRef]
-  );
-
   return (
-    <div style={{ display: "flex", alignItems: "stretch" }}>
-      <div style={{ flex: 1 }} ref={contentRef}>
-        <>
-          {canComment && (
-            <>
-              {selectionInfo &&
-                createPortal(
-                  <button
-                    onClick={handleAddCommentClick}
-                    className={styles.portal}
-                    style={{
-                      top: selectionInfo.y - 40,
-                      left: selectionInfo.x,
-                    }}
-                  >
-                    Add Comment
-                  </button>,
-                  document.body
-                )}
-            </>
-          )}
-        </>
-        <MDXContent>{children}</MDXContent>
-      </div>
-
-      <div className={styles.commentSidebar}>
-        <CommentsSidebar
-          canSeeComments={canSeeComments}
-          showSidebar={showSidebar}
-          draftComment={draftComment}
-          comments={comments}
-          setShowSidebar={handleSetShowSidebar}
-          setDraftComment={setDraftComment}
-          handleAddComment={handleAddComment}
-          onResolveComment={onResolveComment}
-        />
-      </div>
-    </div>
+    <CommentsContext.Provider value={value}>
+      {children}
+    </CommentsContext.Provider>
   );
 }
 
-function MobileView({ children }: Props) {
-  return <MDXContent>{children}</MDXContent>;
+function BottomDrawer({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (!open) return null;
+
+  return createPortal(
+    <div className={styles.drawerOverlay} onClick={onClose}>
+      <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.drawerHandle} />
+
+        <header className={styles.drawerHeader}>
+          <h2>Comments:</h2>
+        </header>
+
+        <div className={styles.drawerBody}>{children}</div>
+      </div>
+    </div>,
+    document.getElementById("modal-root")!
+  );
+}
+
+function CommentsPanel() {
+  const { comments, draftComment } = useComments();
+
+  return (
+    <>
+      {draftComment && (
+        <CommentCard card={draftComment as any} onResolve={() => {}} />
+      )}
+
+      {comments.map((c) => (
+        <CommentCard key={c.id} card={c} onResolve={() => {}} />
+      ))}
+    </>
+  );
 }
