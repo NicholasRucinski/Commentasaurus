@@ -14,7 +14,7 @@ const config: Config = {
       require.resolve("./plugins/commentasaurus"),
       {
         // The url for the API. Default is Localhost:8080
-        apiUrl: "https://api.commentasaurus.nickrucinski.com",
+        // apiUrl: "https://api.commentasaurus.nickrucinski.com",
         // Should the comment sidebar be shown by default
         autoShowComments: false,
         // Sets the permissions for who can comment

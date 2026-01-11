@@ -82,7 +82,7 @@ query GetDiscussionComments($discussionId: ID!) {
           id
           body
           author {
-            login
+          	login
           }
           createdAt
         }

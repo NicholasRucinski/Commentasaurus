@@ -1,10 +1,31 @@
 .commentCard {
+  position: relative;
+  width: calc(100% - 24px);
+  /* max-height: 180px; */
+  margin: 0 12px;
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-color-content);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quotedText {
+  background-color: var(--ifm-color-warning-lightest);
+  color: var(--ifm-color-black);
+  padding: 0px 8px;
+  font-style: italic;
+}
+
+.commentCardDesktop {
   position: absolute;
   width: calc(100% - 24px);
   /* max-height: 180px; */
   margin: 0 12px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-color-content);
   border-radius: 10px;
   padding: 10px 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
@@ -36,9 +57,8 @@
 }
 
 .commentCard:hover {
-  background: #fdfdfd;
+  background: var(--ifm-hover-overlay);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  border-color: #d1d5db;
 }
 
 .commentCardInput {
@@ -63,15 +83,15 @@
 .showMoreButton {
   background: none;
   border: none;
-  color: #0070f3;
+  color: var(--ifm-color-info);
   cursor: pointer;
   font-size: 0.9rem;
   margin-top: 8px;
 }
 
 .resolveButton{
-  background-color: #16f4aa8a;
-  border: 1px solid #059669;
+  background-color: var(--ifm-color-info);;
+  /* border: 1px solid #059669; */
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -82,10 +102,10 @@
 }
 
 .resolveButton:hover {
-  background-color: #12dd99; 
-  border-color: #059669;
+  background-color: var(--ifm-color-info-dark);
+  /* border-color: #059669; */
 }
 
 .resolveButton:active {
-  background-color: #059669;
+  background-color: var(--ifm-color-info-darkest);
 }

@@ -77,13 +77,13 @@ This will open http://localhost:3000 for you.
 
 ## Environment Variables
 
-DOCKER_TAG=<Where the docker image should be uploaded to>
+DOCKER_TAG=< Where the docker image should be uploaded to>
 
-GITHUB_TOKEN=<GitHub token required for allowing unauthenticated users>
-OAUTH_ClIENT_ID=<Client ID of GitHub OAuth App>
-OAUTH_SECRET=<Secret from GitHub OAuth App>
-JWT_SECRET=<Random long string>
-COOKIE_KEY=<32bit string for cookie encryption>
+GITHUB_TOKEN=< GitHub token required for allowing unauthenticated users >
+OAUTH_ClIENT_ID=< Client ID of GitHub OAuth App >
+OAUTH_SECRET=< Secret from GitHub OAuth App >
+JWT_SECRET=< Random long string >
+COOKIE_KEY=< 32bit str for cookie encryption >
 
 See the example Docusaurus config for setting up the plugin.
 

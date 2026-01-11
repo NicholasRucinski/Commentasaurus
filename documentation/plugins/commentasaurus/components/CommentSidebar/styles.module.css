@@ -6,13 +6,14 @@
 }
 
 .sidebar {
+  user-select: none;
   position: relative;
   width: 350px;
   height: 100%;
   box-shadow: -2px 0 6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #1d1d1d;
+  border-left: 1px solid var(--ifm-color-content);
   transition: transform 0.3s ease;
 }
 
@@ -25,8 +26,8 @@
   position: absolute;
   /* top: 50%; */
   transform: translateY(-50%);
-  background: #2563eb;
-  color: white;
+  background: var(--ifm-color-primary);
+  color: var(--ifm-color-white);
   border: none;
   border-radius: 8px 0 0 8px;
   padding: 8px 12px;
@@ -37,7 +38,7 @@
 }
 
 .toggleButton:hover {
-  background: #1e4fba;
+  background: var(--ifm-color-primary-dark);
 }
 
 .toggleHide {

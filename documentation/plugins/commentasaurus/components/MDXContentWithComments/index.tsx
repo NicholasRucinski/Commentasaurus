@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PositionedComment, Comment, BaseComment } from "../../types";
 import { useSelection } from "../../hooks/useSelection";
 import { useUser } from "../../contexts/UserContext";
@@ -15,6 +15,8 @@ import { createPortal } from "react-dom";
 import type { Props } from "@theme/DocItem/Content";
 import CommentCard from "../CommentCard";
 import { CommentsContext, useComments } from "../../hooks/useComments";
+import { Drawer } from "vaul";
+import DraftComment from "../DraftCommentCard";
 
 export default function ContentWithComments({ children }: Props) {
   const isMobile = useIsMobile();
@@ -31,8 +33,70 @@ export default function ContentWithComments({ children }: Props) {
 }
 
 function DesktopLayout({ children }: Props) {
-  const { comments, draftComment, setDraftComment } = useComments();
+  const {
+    comments,
+    draftComment,
+    setDraftComment,
+    setComments,
+    clearSelection,
+  } = useComments();
   const [showSide, setShowSidebar] = useState<boolean>(true);
+
+  const {
+    apiUrl,
+    autoShowComments,
+    repoOwner,
+    repoName,
+    repoID,
+    repoCategoryId,
+    commentPermission,
+  } = useCommentasaurusConfig();
+
+  const handleAddComment = useCallback(
+    async (draft: BaseComment) => {
+      const { id, error } = await createComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        draft
+      );
+      if (!id || error) {
+        console.error("error creating comment: ", error);
+
+        setDraftComment(null);
+        clearSelection();
+        return;
+      }
+      if (!draft.comment.trim()) return;
+      const newComment: Comment = { id: id, ...draft, type: "TEXT" };
+      setComments((prev) => [...prev, newComment]);
+      setDraftComment(null);
+      clearSelection();
+    },
+    [clearSelection]
+  );
+
+  const onResolveComment = (comment: BaseComment) => {
+    const resolve = async () => {
+      const { error } = await resolveComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        comment
+      );
+      if (error) {
+      }
+    };
+    resolve();
+    setComments((prev) => prev.filter((c) => c.id !== comment.id));
+  };
+
   return (
     <div style={{ display: "flex", alignItems: "stretch" }}>
       <Content>{children}</Content>
@@ -45,8 +109,8 @@ function DesktopLayout({ children }: Props) {
           setShowSidebar={setShowSidebar}
           draftComment={draftComment}
           setDraftComment={setDraftComment}
-          handleAddComment={() => {}}
-          onResolveComment={() => {}}
+          handleAddComment={handleAddComment}
+          onResolveComment={onResolveComment}
         />
       </div>
     </div>
@@ -75,28 +139,22 @@ function MobileLayout({ children }: Props) {
 }
 
 function Content({ children }: Props) {
-  const { contentRef, canComment, selectionInfo, setDraftComment, setOpen } =
+  const [mounted, setMounted] = useState(false);
+  const { contentRef, canComment, setDraftComment, selectionInfo, setOpen } =
     useComments();
 
-  const handleAddComment = () => {
+  const { user } = useUser();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!selectionInfo) return;
+    console.log(selectionInfo);
+  }, [selectionInfo]);
 
-    setOpen(true);
-
-    setDraftComment({
-      id: crypto.randomUUID(),
-      page: window.location.pathname,
-      comment: "",
-      y: selectionInfo.y,
-      contextBefore: "",
-      text: selectionInfo.text,
-      contextAfter: "",
-      resolved: false,
-      user: "me",
-      createdAt: Date.now().toString(),
-      top: 10,
-    });
-  };
+  if (!mounted) return <MDXContent>{children}</MDXContent>;
 
   return (
     <div ref={contentRef} className={styles.content}>
@@ -104,18 +162,38 @@ function Content({ children }: Props) {
         selectionInfo &&
         createPortal(
           <button
-            className={styles.addCommentButton}
+            className={styles.portal}
             style={{
-              top: selectionInfo.y - 40,
-              left: selectionInfo.x,
+              position: "fixed",
+              top: selectionInfo.y - window.scrollY - 40,
+              left: selectionInfo.x - window.scrollX,
+              zIndex: 1000,
             }}
-            onClick={handleAddComment}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              if (!selectionInfo) return;
+              // if (!showSidebar) setShowSidebar(true);
+              const draft: PositionedComment = {
+                id: crypto.randomUUID(),
+                page: window.location.pathname,
+                y: selectionInfo.y,
+                comment: "",
+                contextBefore: selectionInfo.contextBefore,
+                text: selectionInfo.text,
+                contextAfter: selectionInfo.contextAfter,
+                top: selectionInfo.y - 270,
+                resolved: false,
+                user: user.name,
+                createdAt: Date.now().toString(),
+              };
+              setOpen(true);
+              setDraftComment(draft);
+            }}
           >
             Add comment
           </button>,
           document.body
         )}
-
       <MDXContent>{children}</MDXContent>
     </div>
   );
@@ -148,7 +226,7 @@ function CommentsController({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(autoShowComments);
 
   useEffect(() => {
-    if (!contentRef.current) return;
+    // if (!contentRef.current) return;
 
     (async () => {
       const { allowed } = await isUserAllowed(
@@ -218,35 +296,107 @@ function BottomDrawer({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  if (!open) return null;
+  return (
+    <Drawer.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <Drawer.Portal>
+        <Drawer.Overlay className={styles.drawerOverlay} />
 
-  return createPortal(
-    <div className={styles.drawerOverlay} onClick={onClose}>
-      <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.drawerHandle} />
+        <Drawer.Content className={styles.drawer}>
+          <div className={styles.drawerHandle} />
 
-        <header className={styles.drawerHeader}>
-          <h2>Comments:</h2>
-        </header>
-
-        <div className={styles.drawerBody}>{children}</div>
-      </div>
-    </div>,
-    document.getElementById("modal-root")!
+          <header className={styles.drawerHeader}>
+            <Drawer.Title>Comments</Drawer.Title>
+            <button className={styles.drawerButton} onClick={onClose}>
+              ✕
+            </button>
+          </header>
+          <div className={styles.drawerBody}>{children}</div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }
 
 function CommentsPanel() {
-  const { comments, draftComment } = useComments();
+  const {
+    comments,
+    draftComment,
+    setDraftComment,
+    setComments,
+    clearSelection,
+  } = useComments();
+
+  const {
+    apiUrl,
+    autoShowComments,
+    repoOwner,
+    repoName,
+    repoID,
+    repoCategoryId,
+    commentPermission,
+  } = useCommentasaurusConfig();
+
+  const handleAddComment = useCallback(
+    async (draft: BaseComment) => {
+      const { id, error } = await createComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        draft
+      );
+      if (!id || error) {
+        console.error("error creating comment: ", error);
+
+        setDraftComment(null);
+        clearSelection();
+        return;
+      }
+      if (!draft.comment.trim()) return;
+      const newComment: Comment = { id: id, ...draft, type: "TEXT" };
+      setComments((prev) => [...prev, newComment]);
+      setDraftComment(null);
+      clearSelection();
+    },
+    [clearSelection]
+  );
+
+  const onResolveComment = (comment: BaseComment) => {
+    const resolve = async () => {
+      const { error } = await resolveComment(
+        apiUrl,
+        repoOwner,
+        repoName,
+        repoID,
+        repoCategoryId,
+        window.location.pathname,
+        comment
+      );
+      if (error) {
+      }
+    };
+    resolve();
+    setComments((prev) => prev.filter((c) => c.id !== comment.id));
+  };
 
   return (
     <>
       {draftComment && (
-        <CommentCard card={draftComment as any} onResolve={() => {}} />
+        <DraftComment
+          draftComment={draftComment}
+          onCommentChange={setDraftComment}
+          onSubmit={handleAddComment}
+        />
       )}
 
       {comments.map((c) => (
-        <CommentCard key={c.id} card={c} onResolve={() => {}} />
+        <CommentCard
+          key={c.id}
+          card={c}
+          onResolve={() => onResolveComment(c)}
+        />
       ))}
     </>
   );

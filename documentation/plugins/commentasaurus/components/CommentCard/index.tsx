@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 interface CommentCardProps {
   card: Comment;
@@ -24,12 +25,14 @@ const CommentCard: React.FC<CommentCardProps> = ({ card, onResolve }) => {
   const isTextOverflowing = card.text.length > MAX_TEXT_PREVIEW_LENGTH;
   const isCommentOverflowing = card.comment.length > MAX_PREVIEW_LENGTH;
 
+  const isMobile = useIsMobile();
+
   return (
     <>
       <div
-        className={`${styles.commentCard} ${
-          isCommentOverflowing ? styles.fade : ""
-        }`}
+        className={`${
+          isMobile ? styles.commentCard : styles.commentCardDesktop
+        } ${isCommentOverflowing ? styles.fade : ""}`}
         onMouseEnter={() =>
           document
             .querySelector(`[data-comment-id="${card.id}"]`)
@@ -99,55 +102,89 @@ const CommentModal = ({ open, onClose, card }) => {
 
   if (!open) return null;
 
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) {
-      onClose();
-    }
-  };
-
   return createPortal(
     <div
       ref={overlayRef}
-      onClick={handleOverlayClick}
+      onClick={(e) => e.target === overlayRef.current && onClose()}
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        padding: "40px",
-        zIndex: 9999,
+        background: "rgba(0,0,0,0.45)",
+        zIndex: 1005,
         display: "flex",
+        alignItems: "center",
         justifyContent: "center",
-        overflowY: "auto",
+        padding: "16px",
       }}
     >
       <div
         style={{
-          background: "white",
-          padding: "48px",
-          marginTop: "15%",
-          marginBottom: "15%",
-          borderRadius: "10px",
-          maxWidth: "700px",
+          background: "var(--ifm-background-surface-color)",
           width: "100%",
-          boxShadow: "0 4px 30px rgba(0,0,0,0.2)",
+          maxWidth: "720px",
+          maxHeight: "85vh",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: "14px",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <h3>{card.text}</h3>
+        <header
+          style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--ifm-blockquote-border-color)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>"{card.text}"</h3>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: "transparent",
+              border: "none",
+              fontSize: "20px",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </header>
 
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-          {card.comment}
-        </ReactMarkdown>
+        <div
+          style={{
+            padding: "20px",
+            overflowY: "auto",
+            flex: 1,
+          }}
+        >
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+          >
+            {card.comment}
+          </ReactMarkdown>
+        </div>
 
-        <p>
-          <em>- {card.user}</em>
-        </p>
-
-        <button onClick={onClose} style={{ marginTop: "20px" }}>
-          Close
-        </button>
+        <footer
+          style={{
+            padding: "12px 20px",
+            borderTop: "1px solid var(--ifm-blockquote-border-color)",
+            fontSize: "14px",
+            color: "#555",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>— {card.user}</span>
+          <span>{timeAgo(card.createdAt)}</span>
+        </footer>
       </div>
     </div>,
-    document.getElementById("modal-root")!
+    document.body
   );
 };
 

@@ -72,7 +72,7 @@ func (h *Handler) AuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	claims := jwt.MapClaims{
 		"user_id":    userData.ID,
-		"name":       userData.Name,
+		"name":       userData.Login,
 		"email":      userData.Email,
 		"avatar_url": userData.AvatarUrl,
 		"orgs":       userData.OrgLogins,
@@ -151,7 +151,7 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user := user.User{
 		ID:        int64(claims["user_id"].(float64)),
-		Name:      claims["name"].(string),
+		Login:     claims["name"].(string),
 		Email:     claims["email"].(string),
 		AvatarUrl: claims["avatar_url"].(string),
 	}
@@ -231,13 +231,13 @@ func getUserData(accessToken string) (*user.User, error) {
 	defer orgsResp.Body.Close()
 
 	var orgs []struct {
-		Login string `json:"login"`
+		OrgLogin string `json:"login"`
 	}
 	json.NewDecoder(orgsResp.Body).Decode(&orgs)
 
 	orgLogins := []string{}
 	for _, org := range orgs {
-		orgLogins = append(orgLogins, org.Login)
+		orgLogins = append(orgLogins, org.OrgLogin)
 	}
 
 	userData.OrgLogins = orgLogins
