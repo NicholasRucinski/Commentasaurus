@@ -217,7 +217,6 @@ func getUserData(accessToken string) (*user.User, error) {
 	defer userResp.Body.Close()
 
 	body, _ := io.ReadAll(userResp.Body)
-	log.Println(string(body))
 	var userData user.User
 	json.Unmarshal(body, &userData)
 

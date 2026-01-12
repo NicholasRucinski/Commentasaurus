@@ -1,3 +1,4 @@
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { BaseComment, PositionedComment } from "../../types";
 import styles from "./styles.module.css";
 
@@ -23,9 +24,13 @@ const DraftComment = ({
     }
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <div
-      className={styles.draftCommentCard}
+      className={
+        isMobile ? styles.draftCommentCard : styles.draftCommentCardDesktop
+      }
       style={{ top: `${draftComment.top}px` }}
     >
       <p>
