@@ -142,14 +142,14 @@ function Content({ children }: Props) {
 
   useEffect(() => {
     if (!selectionInfo) return;
-    console.log(selectionInfo);
   }, [selectionInfo]);
 
   if (!mounted) return <MDXContent>{children}</MDXContent>;
-
+  // TODO: Remove that user check since the user should be removed from the context
   return (
     <div ref={contentRef} className={styles.content}>
       {canComment &&
+        user &&
         selectionInfo &&
         createPortal(
           <div
@@ -178,7 +178,7 @@ function Content({ children }: Props) {
                   contextAfter: selectionInfo.contextAfter,
                   top: selectionInfo.y - 270,
                   resolved: false,
-                  user: user.name,
+                  user: user?.name,
                   createdAt: Date.now().toString(),
                 };
                 setOpen(true);

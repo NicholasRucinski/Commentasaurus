@@ -24,7 +24,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       return;
     }
-    console.log(fetchedUser);
     setUser(fetchedUser);
   };
 

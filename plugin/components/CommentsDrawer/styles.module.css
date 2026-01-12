@@ -1,0 +1,162 @@
+.mobileCommentButton {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 14px 20px;
+  border-radius: 999px;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.mobileCommentButton:hover {
+  background: var(--ifm-color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 85vh;
+  max-height: 85vh;
+  background-color: var(--ifm-background-surface-color);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.drawerHandleContainer {
+  padding: 12px 0 8px;
+  display: flex;
+  justify-content: center;
+  cursor: grab;
+}
+
+.drawerHandle {
+  width: 40px;
+  height: 4px;
+  background: var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  opacity: 0.6;
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  flex-shrink: 0;
+}
+
+.drawerTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ifm-color-emphasis-900);
+}
+
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+.drawerBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drawerBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drawerBody::-webkit-scrollbar-thumb {
+  background: var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+}
+
+.drawerBody::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-color-emphasis-400);
+}
+
+.drawerButton {
+  padding: 8px 12px;
+  background: var(--ifm-color-emphasis-100);
+  border: none;
+  border-radius: 8px;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.drawerButton:hover {
+  background: var(--ifm-color-danger-lightest);
+  color: var(--ifm-color-danger);
+}
+
+.drawerButton:active {
+  transform: scale(0.95);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--ifm-color-emphasis-600);
+  font-style: italic;
+}
+
+body:has(.drawer) {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .drawerBody {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+}
