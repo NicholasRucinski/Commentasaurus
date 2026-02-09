@@ -77,7 +77,15 @@ This will open http://localhost:3000 for you.
 
 ## Environment Variables
 
-TODO
+DOCKER_TAG=< Where the docker image should be uploaded to>
+
+GITHUB_TOKEN=< GitHub token required for allowing unauthenticated users >
+OAUTH_ClIENT_ID=< Client ID of GitHub OAuth App >
+OAUTH_SECRET=< Secret from GitHub OAuth App >
+JWT_SECRET=< Random long string >
+COOKIE_KEY=< 32bit str for cookie encryption >
+
+See the example Docusaurus config for setting up the plugin.
 
 ## Preview
 
@@ -85,7 +93,7 @@ TODO
 
 ## Contributing
 
-We welcome contributions! Please open issues, submit pull requests, or reach out with suggestions.
+I welcome contributions! Please open issues, submit pull requests, or reach out with suggestions.
 
 1. Fork the repo
 2. Create your branch (`git checkout -b feature/thing`)
@@ -96,6 +104,7 @@ We welcome contributions! Please open issues, submit pull requests, or reach out
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](https://github.com/NicholasRucinski/Commentasaurus/blob/main/LICENCE.md) for details.
+While not required by the license, contributions back to this repository for any fixes or improvements are greatly appreciated.
 
 ## Collaborators
 

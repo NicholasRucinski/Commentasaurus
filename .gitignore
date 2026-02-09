@@ -26,6 +26,3 @@ main
 
 # Air build files
 tmp/
-
-# The config so I stop breaking prod
-docusaurus.config.ts
