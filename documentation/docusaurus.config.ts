@@ -11,7 +11,7 @@ const config: Config = {
 
   plugins: [
     [
-      require.resolve("./plugins/commentasaurus"),
+      "@commentasaurus/commentasaurus",
       {
         // The url for the API. Default is Localhost:8080
         // apiUrl: "https://api.commentasaurus.nickrucinski.com",

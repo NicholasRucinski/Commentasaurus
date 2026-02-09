@@ -1,0 +1,10 @@
+src/
+tsconfig.json
+*.tsbuildinfo
+.git/
+.github/
+.gitignore
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
