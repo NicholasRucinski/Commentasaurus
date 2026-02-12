@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkcommentasaurus_docs=globalThis.webpackChunkcommentasaurus_docs||[]).push([[6366],{6366(s,c,e){e.d(c,{createArchitectureServices:()=>a.S});var a=e(8980);e(7960)}}]);
